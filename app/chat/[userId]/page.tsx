@@ -19,10 +19,16 @@ export default function Chat() {
   const router = useRouter();
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
     loadMessages();
     // For simplicity, set username to userId
     setChatUserName(`User ${userId}`);
-  }, [userId]);
+  }, [userId, router]);
 
   const loadMessages = async () => {
     const token = localStorage.getItem('token');

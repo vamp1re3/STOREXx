@@ -29,8 +29,13 @@ export default function Profile() {
   const router = useRouter();
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
     loadProfile();
-  }, [userId]);
+  }, [userId, router]);
 
   const loadProfile = async () => {
     const token = localStorage.getItem('token');

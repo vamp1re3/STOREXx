@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 interface Post {
   id: number;
+  user_id: number;
   username: string;
   profile_pic: string;
   image_url: string;
@@ -22,9 +23,7 @@ export default function Home() {
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     setToken(storedToken);
-    if (storedToken) {
-      loadPosts(storedToken);
-    }
+    loadPosts(storedToken ?? undefined);
   }, []);
 
   const loadPosts = async (authToken?: string) => {
@@ -89,30 +88,41 @@ export default function Home() {
             <button onClick={post}>Post</button>
             <button onClick={logout}>Logout</button>
           </div>
-
-          <div id="feed">
-            {posts.map((p) => (
-              <div key={p.id} className="post">
-                <div className="user">
-                  <img
-                    src={p.profile_pic || 'https://via.placeholder.com/40'}
-                    alt="Profile"
-                  />
-                  <b>{p.username}</b>
-                </div>
-                <img src={p.image_url} alt="Post" />
-                <div className="caption">{p.caption}</div>
-                <button
-                  className={`likeBtn ${p.is_liked ? 'liked' : ''}`}
-                  onClick={() => toggleLike(p.id)}
-                >
-                  ❤️ {p.like_count || 0}
-                </button>
-              </div>
-            ))}
-          </div>
         </>
       )}
+
+      <div id="feed">
+        {posts.length === 0 && <div>No posts yet.</div>}
+        {posts.map((p) => (
+          <div key={p.id} className="post">
+            <div className="user">
+              <img
+                src={p.profile_pic || 'https://via.placeholder.com/40'}
+                alt="Profile"
+              />
+              <b>
+                <Link href={`/profile/${p.user_id}`}>
+                  {p.username}
+                </Link>
+              </b>
+            </div>
+            <img src={p.image_url} alt="Post" />
+            <div className="caption">{p.caption}</div>
+            <div className="actions">
+              <button
+                className={`likeBtn ${p.is_liked ? 'liked' : ''}`}
+                disabled={!token}
+                onClick={() => toggleLike(p.id)}
+              >
+                ❤️ {p.like_count || 0}
+              </button>
+              <Link href={`/chat/${p.user_id}`}>
+                <button disabled={!token}>Chat</button>
+              </Link>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
