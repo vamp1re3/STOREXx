@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import pool from '../../../lib/db';
+import pool from '../../../lib/db.ts';
 
 function getUserId(req: NextRequest): number | null {
   const authHeader = req.headers.get('authorization');
