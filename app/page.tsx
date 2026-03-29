@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiLogOut } from 'react-icons/fi';
 
 interface Post {
   id: number;
@@ -19,6 +20,8 @@ export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [img, setImg] = useState('');
   const [cap, setCap] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -27,27 +30,41 @@ export default function Home() {
   }, []);
 
   const loadPosts = async (authToken?: string) => {
-    const res = await fetch('/api/posts', {
-      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-    });
-    const data = await res.json();
-    setPosts(data);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/posts', {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+      });
+      const data = await res.json();
+      setPosts(data);
+    } catch (error) {
+      console.error('Failed to load posts:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const post = async () => {
-    if (!token) return;
+    if (!token || !img.trim() || !cap.trim()) return;
 
-    await fetch('/api/posts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ image_url: img, caption: cap }),
-    });
-    setImg('');
-    setCap('');
-    loadPosts(token);
+    setPosting(true);
+    try {
+      await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ image_url: img, caption: cap }),
+      });
+      setImg('');
+      setCap('');
+      loadPosts(token);
+    } catch (error) {
+      console.error('Failed to post:', error);
+    } finally {
+      setPosting(false);
+    }
   };
 
   const logout = () => {
@@ -62,13 +79,13 @@ export default function Home() {
 
       <div className="navBar">
         <Link href="/" className="navButton">
-          <span className="icon icon-feed" /> Feed
+          <FiRss size={16} /> Feed
         </Link>
         <Link href="/login" className="navButton">
-          <span className="icon icon-login" /> Login
+          <FiLogIn size={16} /> Login
         </Link>
         <Link href="/signup" className="navButton">
-          <span className="icon icon-signup" /> Sign Up
+          <FiUserPlus size={16} /> Sign Up
         </Link>
       </div>
 
@@ -76,10 +93,10 @@ export default function Home() {
         <div className="card" id="auth">
           <p>Please login or sign up to interact.</p>
           <Link href="/login" className="navButton">
-            <span className="icon icon-login" /> Login
+            <FiLogIn size={16} /> Login
           </Link>
           <Link href="/signup" className="navButton">
-            <span className="icon icon-signup" /> Sign Up
+            <FiUserPlus size={16} /> Sign Up
           </Link>
         </div>
       )}
@@ -97,15 +114,37 @@ export default function Home() {
               onChange={(e) => setCap(e.target.value)}
               placeholder="Caption"
             />
-            <button onClick={post}>Post</button>
-            <button onClick={logout}>Logout</button>
+            <button onClick={post} disabled={posting || !img.trim() || !cap.trim()}>
+              {posting ? 'Posting...' : 'Post'}
+            </button>
+            <button onClick={logout} className="logoutBtn">
+              <FiLogOut size={16} /> Logout
+            </button>
           </div>
         </>
       )}
 
       <div id="feed">
-        {posts.length === 0 && <div>No posts yet.</div>}
-        {posts.map((p) => (
+        {loading && (
+          <div className="skeleton-container">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="skeleton-post">
+                <div className="skeleton-header"></div>
+                <div className="skeleton-image"></div>
+                <div className="skeleton-caption"></div>
+                <div className="skeleton-actions"></div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && posts.length === 0 && (
+          <div className="empty-state">
+            <p>No posts yet. Be the first to share something!</p>
+          </div>
+        )}
+
+        {!loading && posts.map((p) => (
           <div key={p.id} className="post">
             <div className="user">
               <img
@@ -126,10 +165,12 @@ export default function Home() {
                 disabled={!token}
                 onClick={() => toggleLike(p.id)}
               >
-                ❤️ {p.like_count || 0}
+                <FiHeart size={16} /> {p.like_count || 0}
               </button>
               <Link href={`/chat/${p.user_id}`}>
-                <button disabled={!token}>Chat</button>
+                <button disabled={!token} className="chatBtn">
+                  <FiMessageCircle size={16} /> Chat
+                </button>
               </Link>
             </div>
           </div>

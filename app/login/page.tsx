@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { FiLogIn, FiUserPlus } from 'react-icons/fi';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -47,10 +48,10 @@ export default function Login() {
           type="password"
         />
         <button className="loginBtn" onClick={login}>
-          <span className="icon icon-login" /> Login
+          <FiLogIn size={18} /> Login
         </button>
         <button className="signupBtn" onClick={() => router.push('/signup')}>
-          <span className="icon icon-signup" /> Sign Up
+          <FiUserPlus size={18} /> Sign Up
         </button>
       </div>
     </div>
