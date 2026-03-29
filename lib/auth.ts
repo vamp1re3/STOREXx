@@ -8,9 +8,13 @@ export interface AuthUser {
 export function authenticate(req: NextRequest): AuthUser | null {
   const authHeader = req.headers.get('authorization');
   if (!authHeader) return null;
+
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) return null;
+
   try {
     const token = authHeader.replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthUser;
+    const decoded = jwt.verify(token, jwtSecret) as AuthUser;
     return decoded;
   } catch {
     return null;

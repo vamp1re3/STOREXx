@@ -14,7 +14,13 @@ export async function POST(req: NextRequest) {
     if (!valid) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 400 });
     }
-    const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET!);
+
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return NextResponse.json({ error: 'JWT_SECRET is not configured' }, { status: 500 });
+    }
+
+    const token = jwt.sign({ id: user.rows[0].id }, jwtSecret, { expiresIn: '7d' });
     return NextResponse.json({ token });
   } catch (error) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
