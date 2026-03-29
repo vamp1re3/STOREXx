@@ -14,10 +14,10 @@ function getUserId(req: NextRequest): number | null {
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { userId: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ userId: string }> }) {
   try {
-    const { userId } = params;
     const currentUserId = getUserId(req);
+    const { userId } = await context.params;
     const user = await pool.query(
       'SELECT id, username, profile_pic FROM users WHERE id=$1',
       [userId]

@@ -14,13 +14,13 @@ function getUserId(req: NextRequest): number | null {
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { postId: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ postId: string }> }) {
   try {
     const userId = getUserId(req);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { postId } = params;
+    const { postId } = await context.params;
     const exists = await pool.query(
       'SELECT * FROM likes WHERE user_id=$1 AND post_id=$2',
       [userId, postId]

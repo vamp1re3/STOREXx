@@ -14,13 +14,13 @@ function getUserId(req: NextRequest): number | null {
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { userId: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ userId: string }> }) {
   try {
     const currentUserId = getUserId(req);
     if (!currentUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { userId } = params;
+    const { userId } = await context.params;
     const result = await pool.query(
       'SELECT * FROM messages WHERE (sender_id=$1 AND receiver_id=$2) OR (sender_id=$2 AND receiver_id=$1) ORDER BY created_at',
       [currentUserId, userId]
@@ -31,13 +31,13 @@ export async function GET(req: NextRequest, { params }: { params: { userId: stri
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { userId: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ userId: string }> }) {
   try {
     const currentUserId = getUserId(req);
     if (!currentUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { userId } = params;
+    const { userId } = await context.params;
     const { content } = await req.json();
     await pool.query(
       'INSERT INTO messages (sender_id, receiver_id, content) VALUES ($1, $2, $3)',

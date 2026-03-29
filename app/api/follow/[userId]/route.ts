@@ -14,13 +14,13 @@ function getUserId(req: NextRequest): number | null {
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { userId: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ userId: string }> }) {
   try {
     const currentUserId = getUserId(req);
     if (!currentUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { userId } = params;
+    const { userId } = await context.params;
     const exists = await pool.query(
       'SELECT * FROM follows WHERE follower_id=$1 AND following_id=$2',
       [currentUserId, userId]
