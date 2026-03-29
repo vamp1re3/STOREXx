@@ -3,9 +3,11 @@
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
+  display_name VARCHAR(100),
   email VARCHAR(100) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
-  profile_pic VARCHAR(255)
+  profile_pic VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE posts (
@@ -34,6 +36,7 @@ CREATE TABLE messages (
   id SERIAL PRIMARY KEY,
   sender_id INTEGER REFERENCES users(id),
   receiver_id INTEGER REFERENCES users(id),
-  content TEXT NOT NULL,
+  content TEXT,
+  image_url VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
     const currentUserId = getUserId(req);
     const { userId } = await context.params;
     const user = await pool.query(
-      'SELECT id, username, profile_pic FROM users WHERE id=$1',
+      'SELECT id, username, display_name, profile_pic, created_at FROM users WHERE id=$1',
       [userId]
     );
     if (user.rows.length === 0) {

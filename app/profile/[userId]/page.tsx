@@ -6,7 +6,9 @@ import { useParams, useRouter } from 'next/navigation';
 interface User {
   id: number;
   username: string;
+  display_name: string;
   profile_pic: string;
+  created_at: string;
 }
 
 interface Post {
@@ -65,7 +67,12 @@ export default function Profile() {
       <div className="card">
         <div className="user">
           <img id="profilePic" src={data.user.profile_pic || 'https://via.placeholder.com/40'} alt="Profile" />
-          <b>{data.user.username}</b>
+          <div>
+            <b>{data.user.display_name || data.user.username}</b>
+            <div style={{ fontSize: '0.9em', color: '#666', marginTop: '4px' }}>
+              @{data.user.username}
+            </div>
+          </div>
         </div>
         <div>
           {data.followers} Followers | {data.following} Following

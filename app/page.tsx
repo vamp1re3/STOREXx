@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiLogOut } from 'react-icons/fi';
+import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiLogOut, FiSettings, FiUpload } from 'react-icons/fi';
 
 interface Post {
   id: number;
   user_id: number;
   username: string;
+  display_name: string;
   profile_pic: string;
   image_url: string;
   caption: string;
@@ -19,9 +20,10 @@ export default function Home() {
   const [token, setToken] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [img, setImg] = useState('');
-  const [cap, setCap] = useState('');
+  const [caption, setCaption] = useState('');
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -44,8 +46,36 @@ export default function Home() {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'post');
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setImg(data.url);
+      } else {
+        alert('Upload failed: ' + data.error);
+      }
+    } catch (error) {
+      alert('Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const post = async () => {
-    if (!token || !img.trim() || !cap.trim()) return;
+    if (!token || !img.trim() || !caption.trim()) return;
 
     setPosting(true);
     try {
@@ -55,10 +85,10 @@ export default function Home() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ image_url: img, caption: cap }),
+        body: JSON.stringify({ image_url: img, caption: caption }),
       });
       setImg('');
-      setCap('');
+      setCaption('');
       loadPosts(token);
     } catch (error) {
       console.error('Failed to post:', error);
@@ -81,6 +111,11 @@ export default function Home() {
         <Link href="/" className="navButton">
           <FiRss size={16} /> Feed
         </Link>
+        {token && (
+          <Link href="/settings" className="navButton">
+            <FiSettings size={16} /> Settings
+          </Link>
+        )}
         <Link href="/login" className="navButton">
           <FiLogIn size={16} /> Login
         </Link>
@@ -104,17 +139,29 @@ export default function Home() {
       {token && (
         <>
           <div className="card" id="postBox">
+            <div className="file-upload">
+              <label htmlFor="post-image-upload" className="upload-btn">
+                <FiUpload size={16} /> {uploading ? 'Uploading...' : img ? 'Change Image' : 'Upload Image'}
+              </label>
+              <input
+                id="post-image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+              {img && (
+                <div className="preview">
+                  <img src={img} alt="Post preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                </div>
+              )}
+            </div>
             <input
-              value={img}
-              onChange={(e) => setImg(e.target.value)}
-              placeholder="Image URL"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Caption (optional)"
             />
-            <input
-              value={cap}
-              onChange={(e) => setCap(e.target.value)}
-              placeholder="Caption"
-            />
-            <button onClick={post} disabled={posting || !img.trim() || !cap.trim()}>
+            <button onClick={post} disabled={posting || !img.trim()}>
               {posting ? 'Posting...' : 'Post'}
             </button>
             <button onClick={logout} className="logoutBtn">
@@ -153,7 +200,7 @@ export default function Home() {
               />
               <b>
                 <Link href={`/profile/${p.user_id}`}>
-                  {p.username}
+                  {p.display_name || p.username}
                 </Link>
               </b>
             </div>

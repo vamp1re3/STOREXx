@@ -38,10 +38,16 @@ export async function POST(req: NextRequest, context: { params: Promise<{ userId
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { userId } = await context.params;
-    const { content } = await req.json();
+    const { content, image_url } = await req.json();
+
+    // Allow messages with either content or image_url
+    if (!content && !image_url) {
+      return NextResponse.json({ error: 'Message must have content or image' }, { status: 400 });
+    }
+
     await pool.query(
-      'INSERT INTO messages (sender_id, receiver_id, content) VALUES ($1, $2, $3)',
-      [currentUserId, userId, content]
+      'INSERT INTO messages (sender_id, receiver_id, content, image_url) VALUES ($1, $2, $3, $4)',
+      [currentUserId, userId, content || null, image_url || null]
     );
     return NextResponse.json({ message: 'Message sent' });
   } catch (error) {

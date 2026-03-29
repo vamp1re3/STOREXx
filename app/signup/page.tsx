@@ -2,15 +2,45 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUserPlus, FiLogIn } from 'react-icons/fi';
+import { FiUserPlus, FiLogIn, FiUpload } from 'react-icons/fi';
 
 export default function Signup() {
   const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [pic, setPic] = useState('');
+  const [profilePic, setProfilePic] = useState('');
+  const [uploading, setUploading] = useState(false);
   const router = useRouter();
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'profile');
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setProfilePic(data.url);
+      } else {
+        alert('Upload failed: ' + data.error);
+      }
+    } catch (error) {
+      alert('Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const signup = async () => {
     if (password !== confirmPassword) {
@@ -20,7 +50,13 @@ export default function Signup() {
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password, profile_pic: pic }),
+      body: JSON.stringify({
+        username,
+        display_name: displayName,
+        email,
+        password,
+        profile_pic: profilePic
+      }),
     });
     if (res.ok) {
       alert('Account created');
@@ -41,9 +77,15 @@ export default function Signup() {
           placeholder="Username"
         />
         <input
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="Display Name (optional)"
+        />
+        <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
+          type="email"
         />
         <input
           value={password}
@@ -57,11 +99,25 @@ export default function Signup() {
           placeholder="Confirm Password"
           type="password"
         />
-        <input
-          value={pic}
-          onChange={(e) => setPic(e.target.value)}
-          placeholder="Profile Pic URL"
-        />
+
+        <div className="file-upload">
+          <label htmlFor="profile-pic-upload" className="upload-btn">
+            <FiUpload size={16} /> {uploading ? 'Uploading...' : 'Upload Profile Picture'}
+          </label>
+          <input
+            id="profile-pic-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+          {profilePic && (
+            <div className="preview">
+              <img src={profilePic} alt="Profile preview" style={{ width: '50px', height: '50px', borderRadius: '50%' }} />
+            </div>
+          )}
+        </div>
+
         <button className="signupBtn" onClick={signup}>
           <FiUserPlus size={18} /> Sign Up
         </button>
