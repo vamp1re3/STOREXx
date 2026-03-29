@@ -1,0 +1,12 @@
+# Node modules (huge folder, rebuild locally)
+backend/node_modules/
+
+# Environment variables (keep JWT and DB URL secret)
+backend/.env
+
+# VS Code settings (optional)
+.vscode/
+
+# OS junk files
+.DS_Store
+Thumbs.db

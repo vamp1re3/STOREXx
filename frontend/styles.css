@@ -1,0 +1,116 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #121212;
+  color: rgb(61, 7, 163);
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1, h2, h3 {
+  text-align: center;
+}
+
+.card {
+  background: #1f1f1f;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  border: none;
+  border-radius: 5px;
+  background: #2a2a2a;
+  color: white;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  background: #ff2e63;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.hidden { display: none; }
+
+.post {
+  background: #1f1f1f;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.post img {
+  width: 100%;
+}
+
+.caption {
+  padding: 10px;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.user img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.likeBtn {
+  background: #ff2e63;
+  color: white;
+  padding: 5px 10px;
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.likeBtn.liked {
+  background: #ff6b9d;
+}
+
+.follow-btn {
+  background: #1e90ff;
+  padding: 8px 15px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  color: white;
+}
+
+.chatBox {
+  background: #1f1f1f;
+  padding: 10px;
+  border-radius: 10px;
+  height: 400px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.message-bubble {
+  padding: 8px 12px;
+  border-radius: 15px;
+  margin: 5px 0;
+  max-width: 70%;
+}
+
+.sent { background: #ff2e63; align-self: flex-end; }
+.received { background: #2a2a2a; align-self: flex-start; }
