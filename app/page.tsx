@@ -58,16 +58,28 @@ export default function Home() {
 
   return (
     <div className="container">
-      <h1>🔥 HELKET</h1>
+      <h1>HELKET</h1>
+
+      <div className="navBar">
+        <Link href="/" className="navButton">
+          <span className="icon icon-feed" /> Feed
+        </Link>
+        <Link href="/login" className="navButton">
+          <span className="icon icon-login" /> Login
+        </Link>
+        <Link href="/signup" className="navButton">
+          <span className="icon icon-signup" /> Sign Up
+        </Link>
+      </div>
 
       {!token && (
         <div className="card" id="auth">
-          <p>Please login or sign up to see the feed.</p>
-          <Link href="/login">
-            <button>Login</button>
+          <p>Please login or sign up to interact.</p>
+          <Link href="/login" className="navButton">
+            <span className="icon icon-login" /> Login
           </Link>
-          <Link href="/signup">
-            <button>Sign Up</button>
+          <Link href="/signup" className="navButton">
+            <span className="icon icon-signup" /> Sign Up
           </Link>
         </div>
       )}

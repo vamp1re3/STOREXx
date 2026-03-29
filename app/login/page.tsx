@@ -32,7 +32,7 @@ export default function Login() {
 
   return (
     <div className="container">
-      <h1>🔥 HELKET</h1>
+      <h1>HELKET</h1>
 
       <div className="card">
         <input
@@ -46,8 +46,12 @@ export default function Login() {
           placeholder="Password"
           type="password"
         />
-        <button onClick={login}>Login</button>
-        <button onClick={() => router.push('/signup')}>Sign Up</button>
+        <button className="loginBtn" onClick={login}>
+          <span className="icon icon-login" /> Login
+        </button>
+        <button className="signupBtn" onClick={() => router.push('/signup')}>
+          <span className="icon icon-signup" /> Sign Up
+        </button>
       </div>
     </div>
   );

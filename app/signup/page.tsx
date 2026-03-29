@@ -31,7 +31,7 @@ export default function Signup() {
 
   return (
     <div className="container">
-      <h1>🔥 HELKET</h1>
+      <h1>HELKET</h1>
 
       <div className="card">
         <input
@@ -61,8 +61,12 @@ export default function Signup() {
           onChange={(e) => setPic(e.target.value)}
           placeholder="Profile Pic URL"
         />
-        <button onClick={signup}>Sign Up</button>
-        <button onClick={() => router.push('/login')}>Login</button>
+        <button className="signupBtn" onClick={signup}>
+          <span className="icon icon-signup" /> Sign Up
+        </button>
+        <button className="loginBtn" onClick={() => router.push('/login')}>
+          <span className="icon icon-login" /> Login
+        </button>
       </div>
     </div>
   );
