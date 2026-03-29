@@ -77,9 +77,14 @@ export default function Profile() {
         <div>
           {data.followers} Followers | {data.following} Following
         </div>
-        <button onClick={toggleFollow}>
-          {data.isFollowing ? 'Unfollow' : 'Follow'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+          <button onClick={toggleFollow} className="action-btn">
+            {data.isFollowing ? 'Unfollow' : 'Follow'}
+          </button>
+          <button onClick={() => router.push(`/chat/${data.user.id}`)} className="action-btn chat-btn">
+            💬 Chat
+          </button>
+        </div>
       </div>
 
       <h3>User Posts</h3>

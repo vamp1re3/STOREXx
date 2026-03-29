@@ -111,17 +111,25 @@ export default function Home() {
         <Link href="/" className="navButton">
           <FiRss size={16} /> Feed
         </Link>
-        {token && (
-          <Link href="/settings" className="navButton">
-            <FiSettings size={16} /> Settings
-          </Link>
+        {token ? (
+          <>
+            <Link href="/settings" className="navButton">
+              <FiSettings size={16} /> Settings
+            </Link>
+            <button onClick={logout} className="navButton logout-button">
+              <FiLogOut size={16} /> Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="navButton">
+              <FiLogIn size={16} /> Login
+            </Link>
+            <Link href="/signup" className="navButton">
+              <FiUserPlus size={16} /> Sign Up
+            </Link>
+          </>
         )}
-        <Link href="/login" className="navButton">
-          <FiLogIn size={16} /> Login
-        </Link>
-        <Link href="/signup" className="navButton">
-          <FiUserPlus size={16} /> Sign Up
-        </Link>
       </div>
 
       {!token && (
