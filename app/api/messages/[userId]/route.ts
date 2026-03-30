@@ -21,6 +21,15 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { userId } = await context.params;
+    const blocked = await pool.query(
+      'SELECT 1 FROM blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)',
+      [currentUserId, userId]
+    );
+
+    if (blocked.rows.length > 0) {
+      return NextResponse.json({ error: 'Message access blocked' }, { status: 403 });
+    }
+
     const result = await pool.query(
       'SELECT * FROM messages WHERE (sender_id=$1 AND receiver_id=$2) OR (sender_id=$2 AND receiver_id=$1) ORDER BY created_at',
       [currentUserId, userId]
@@ -38,16 +47,17 @@ export async function POST(req: NextRequest, context: { params: Promise<{ userId
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { userId } = await context.params;
-    const { content, image_url } = await req.json();
+    const { content, image_url, media_type } = await req.json();
 
-    // Allow messages with either content or image_url
     if (!content && !image_url) {
-      return NextResponse.json({ error: 'Message must have content or image' }, { status: 400 });
+      return NextResponse.json({ error: 'Message must have content or media' }, { status: 400 });
     }
 
+    const type = media_type === 'video' ? 'video' : 'image';
+
     await pool.query(
-      'INSERT INTO messages (sender_id, receiver_id, content, image_url) VALUES ($1, $2, $3, $4)',
-      [currentUserId, userId, content || null, image_url || null]
+      'INSERT INTO messages (sender_id, receiver_id, content, image_url, media_type) VALUES ($1, $2, $3, $4, $5)',
+      [currentUserId, userId, content || null, image_url || null, type]
     );
     return NextResponse.json({ message: 'Message sent' });
   } catch (error) {

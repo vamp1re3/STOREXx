@@ -19,7 +19,8 @@ export default function Chat() {
   const [msgInput, setMsgInput] = useState('');
   const [chatUserName, setChatUserName] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const router = useRouter();
 
   useEffect(() => {
@@ -61,7 +62,8 @@ export default function Chat() {
 
       const data = await res.json();
       if (data.success) {
-        setImagePreview(data.url);
+        setMediaPreview(data.url);
+        setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
       } else {
         alert('Upload failed: ' + data.error);
       }
@@ -77,9 +79,9 @@ export default function Chat() {
     if (!token) return;
 
     const content = msgInput.trim();
-    const imageUrl = imagePreview;
+    const mediaUrl = mediaPreview;
 
-    if (!content && !imageUrl) return;
+    if (!content && !mediaUrl) return;
 
     try {
       await fetch(`/api/messages/${userId}`, {
@@ -88,7 +90,7 @@ export default function Chat() {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content: content || null, image_url: imageUrl }),
+        body: JSON.stringify({ content: content || null, image_url: mediaUrl, media_type: mediaType }),
       });
 
       setMsgInput('');
@@ -115,20 +117,32 @@ export default function Chat() {
           >
             {m.content && <div>{m.content}</div>}
             {m.image_url && (
-              <img
-                src={m.image_url}
-                alt="Shared image"
-                style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', marginTop: '8px' }}
-              />
+              m.media_type === 'video' ? (
+                <video
+                  src={m.image_url}
+                  controls
+                  style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', marginTop: '8px' }}
+                />
+              ) : (
+                <img
+                  src={m.image_url}
+                  alt="Shared media"
+                  style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', marginTop: '8px' }}
+                />
+              )
             )}
           </div>
         ))}
       </div>
 
-      {imagePreview && (
+      {mediaPreview && (
         <div className="image-preview">
-          <img src={imagePreview} alt="Preview" style={{ maxWidth: '100px', maxHeight: '100px', borderRadius: '8px' }} />
-          <button onClick={() => setImagePreview(null)}>Remove</button>
+          {mediaType === 'video' ? (
+            <video src={mediaPreview} controls style={{ maxWidth: '140px', maxHeight: '120px', borderRadius: '8px' }} />
+          ) : (
+            <img src={mediaPreview} alt="Preview" style={{ maxWidth: '140px', maxHeight: '120px', borderRadius: '8px' }} />
+          )}
+          <button onClick={() => setMediaPreview(null)}>Remove</button>
         </div>
       )}
 
@@ -140,7 +154,7 @@ export default function Chat() {
           <input
             id="chat-image-upload"
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             onChange={handleFileUpload}
             style={{ display: 'none' }}
           />

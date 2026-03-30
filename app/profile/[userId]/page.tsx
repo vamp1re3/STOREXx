@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 interface User {
@@ -30,23 +30,25 @@ export default function Profile() {
   const [data, setData] = useState<ProfileData | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-    loadProfile();
-  }, [userId, router]);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     const token = localStorage.getItem('token');
     const res = await fetch(`/api/profile/${userId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     const profileData = await res.json();
     setData(profileData);
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    (async () => {
+      await loadProfile();
+    })();
+  }, [userId, router, loadProfile]);
 
   const toggleFollow = async () => {
     const token = localStorage.getItem('token');

@@ -19,6 +19,34 @@ BEGIN
     END IF;
 END $$;
 
+-- Add media_type columns if missing
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'media_type') THEN
+        ALTER TABLE posts ADD COLUMN media_type VARCHAR(20) DEFAULT 'image' NOT NULL;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'messages' AND column_name = 'media_type') THEN
+        ALTER TABLE messages ADD COLUMN media_type VARCHAR(20) DEFAULT 'image';
+    END IF;
+END $$;
+
+-- Create blocks table if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'blocks') THEN
+        CREATE TABLE blocks (
+          id SERIAL PRIMARY KEY,
+          blocker_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          blocked_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(blocker_id, blocked_id)
+        );
+    END IF;
+END $$;
+
 -- Add CASCADE DELETE constraints if they don't exist
 -- Note: This might fail if there are existing foreign key constraints, but that's okay
 

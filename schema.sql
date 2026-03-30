@@ -21,6 +21,7 @@ CREATE TABLE posts (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   image_url VARCHAR(255) NOT NULL,
+  media_type VARCHAR(20) DEFAULT 'image' NOT NULL,
   caption TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -60,7 +61,16 @@ CREATE TABLE messages (
   receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   content TEXT,
   image_url VARCHAR(255),
+  media_type VARCHAR(20) DEFAULT 'image',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE blocks (
+  id SERIAL PRIMARY KEY,
+  blocker_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  blocked_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(blocker_id, blocked_id)
 );
 
 -- Indexes for messages table

@@ -38,13 +38,29 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
       [userId]
     );
     let isFollowing = false;
+    let isBlocked = false;
+    let isBlocker = false;
+
     if (currentUserId) {
       const followCheck = await pool.query(
         'SELECT * FROM follows WHERE follower_id=$1 AND following_id=$2',
         [currentUserId, userId]
       );
       isFollowing = followCheck.rows.length > 0;
+
+      const blockCheck = await pool.query(
+        'SELECT * FROM blocks WHERE blocker_id=$1 AND blocked_id=$2',
+        [currentUserId, userId]
+      );
+      const blockerCheck = await pool.query(
+        'SELECT * FROM blocks WHERE blocker_id=$1 AND blocked_id=$2',
+        [userId, currentUserId]
+      );
+
+      isBlocked = blockCheck.rows.length > 0;
+      isBlocker = blockerCheck.rows.length > 0;
     }
+
     return NextResponse.json({
       user: user.rows[0],
       posts: posts.rows,

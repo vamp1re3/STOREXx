@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiLogOut, FiSettings, FiUpload } from 'react-icons/fi';
+import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiLogOut, FiSettings, FiUpload, FiSearch } from 'react-icons/fi';
 
 interface Post {
   id: number;
@@ -19,7 +19,8 @@ interface Post {
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [img, setImg] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [caption, setCaption] = useState('');
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
@@ -63,7 +64,8 @@ export default function Home() {
 
       const data = await res.json();
       if (data.success) {
-        setImg(data.url);
+        setMediaUrl(data.url);
+        setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
       } else {
         alert('Upload failed: ' + data.error);
       }
@@ -75,7 +77,7 @@ export default function Home() {
   };
 
   const post = async () => {
-    if (!token || !img.trim() || !caption.trim()) return;
+    if (!token || !mediaUrl.trim()) return;
 
     setPosting(true);
     try {
@@ -85,10 +87,11 @@ export default function Home() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ image_url: img, caption: caption }),
+        body: JSON.stringify({ image_url: mediaUrl, media_type: mediaType, caption: caption }),
       });
-      setImg('');
+      setMediaUrl('');
       setCaption('');
+      setMediaType('image');
       loadPosts(token);
     } catch (error) {
       console.error('Failed to post:', error);
@@ -111,6 +114,11 @@ export default function Home() {
         <Link href="/" className="navButton">
           <FiRss size={16} /> Feed
         </Link>
+        {token && (
+          <Link href="/search" className="navButton">
+            <FiSearch size={16} /> Search
+          </Link>
+        )}
         {token ? (
           <>
             <Link href="/settings" className="navButton">
@@ -148,19 +156,23 @@ export default function Home() {
         <>
           <div className="card" id="postBox">
             <div className="file-upload">
-              <label htmlFor="post-image-upload" className="upload-btn">
-                <FiUpload size={16} /> {uploading ? 'Uploading...' : img ? 'Change Image' : 'Upload Image'}
+              <label htmlFor="post-media-upload" className="upload-btn">
+                <FiUpload size={16} /> {uploading ? 'Uploading...' : mediaUrl ? 'Change Media' : 'Upload Media'}
               </label>
               <input
-                id="post-image-upload"
+                id="post-media-upload"
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 onChange={handleFileUpload}
                 style={{ display: 'none' }}
               />
-              {img && (
+              {mediaUrl && (
                 <div className="preview">
-                  <img src={img} alt="Post preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                  {mediaType === 'image' ? (
+                    <img src={mediaUrl} alt="Post preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                  ) : (
+                    <video src={mediaUrl} style={{ width: '120px', height: '90px', borderRadius: '8px' }} controls />
+                  )}
                 </div>
               )}
             </div>
@@ -169,7 +181,7 @@ export default function Home() {
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Caption (optional)"
             />
-            <button onClick={post} disabled={posting || !img.trim()}>
+            <button onClick={post} disabled={posting || !mediaUrl.trim()}>
               {posting ? 'Posting...' : 'Post'}
             </button>
             <button onClick={logout} className="logoutBtn">
@@ -179,58 +191,68 @@ export default function Home() {
         </>
       )}
 
-      <div id="feed">
-        {loading && (
-          <div className="skeleton-container">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="skeleton-post">
-                <div className="skeleton-header"></div>
-                <div className="skeleton-image"></div>
-                <div className="skeleton-caption"></div>
-                <div className="skeleton-actions"></div>
+      {token ? (
+        <div id="feed">
+          {loading && (
+            <div className="skeleton-container">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="skeleton-post">
+                  <div className="skeleton-header"></div>
+                  <div className="skeleton-image"></div>
+                  <div className="skeleton-caption"></div>
+                  <div className="skeleton-actions"></div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && posts.length === 0 && (
+            <div className="empty-state">
+              <p>No posts yet. Be the first to share something!</p>
+            </div>
+          )}
+
+          {!loading && posts.map((p) => (
+            <div key={p.id} className="post">
+              <div className="user">
+                <img
+                  src={p.profile_pic || 'https://via.placeholder.com/40'}
+                  alt="Profile"
+                />
+                <b>
+                  <Link href={`/profile/${p.user_id}`}>
+                    {p.display_name || p.username}
+                  </Link>
+                </b>
               </div>
-            ))}
-          </div>
-        )}
-
-        {!loading && posts.length === 0 && (
-          <div className="empty-state">
-            <p>No posts yet. Be the first to share something!</p>
-          </div>
-        )}
-
-        {!loading && posts.map((p) => (
-          <div key={p.id} className="post">
-            <div className="user">
-              <img
-                src={p.profile_pic || 'https://via.placeholder.com/40'}
-                alt="Profile"
-              />
-              <b>
-                <Link href={`/profile/${p.user_id}`}>
-                  {p.display_name || p.username}
-                </Link>
-              </b>
-            </div>
-            <img src={p.image_url} alt="Post" />
-            <div className="caption">{p.caption}</div>
-            <div className="actions">
-              <button
-                className={`likeBtn ${p.is_liked ? 'liked' : ''}`}
-                disabled={!token}
-                onClick={() => toggleLike(p.id)}
-              >
-                <FiHeart size={16} /> {p.like_count || 0}
-              </button>
-              <Link href={`/chat/${p.user_id}`}>
-                <button disabled={!token} className="chatBtn">
-                  <FiMessageCircle size={16} /> Chat
+              {p.media_type === 'video' ? (
+                <video src={p.image_url} controls style={{ width: '100%', borderRadius: '12px' }} />
+              ) : (
+                <img src={p.image_url} alt="Post" />
+              )}
+              <div className="caption">{p.caption}</div>
+              <div className="actions">
+                <button
+                  className={`likeBtn ${p.is_liked ? 'liked' : ''}`}
+                  disabled={!token}
+                  onClick={() => toggleLike(p.id)}
+                >
+                  <FiHeart size={16} /> {p.like_count || 0}
                 </button>
-              </Link>
+                <Link href={`/chat/${p.user_id}`}>
+                  <button disabled={!token} className="chatBtn">
+                    <FiMessageCircle size={16} /> Chat
+                  </button>
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <p>Please login or sign up to view the feed.</p>
+        </div>
+      )}
     </div>
   );
 
