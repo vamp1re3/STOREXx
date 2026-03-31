@@ -61,12 +61,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
       isBlocker = blockerCheck.rows.length > 0;
     }
 
+    const safePosts = isBlocked || isBlocker ? [] : posts.rows;
+
     return NextResponse.json({
       user: user.rows[0],
-      posts: posts.rows,
+      posts: safePosts,
       followers: followers.rows[0].count,
       following: following.rows[0].count,
-      isFollowing
+      isFollowing,
+      isBlocked,
+      isBlockedBy: isBlocker,
     });
   } catch (error) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

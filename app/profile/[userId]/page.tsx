@@ -15,6 +15,7 @@ interface Post {
   id: number;
   image_url: string;
   caption: string;
+  media_type?: 'image' | 'video';
 }
 
 interface ProfileData {
@@ -23,6 +24,8 @@ interface ProfileData {
   followers: number;
   following: number;
   isFollowing: boolean;
+  isBlocked: boolean;
+  isBlockedBy: boolean;
 }
 
 export default function Profile() {
@@ -57,7 +60,19 @@ export default function Profile() {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
-    loadProfile();
+    await loadProfile();
+  };
+
+  const toggleBlock = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    await fetch(`/api/blocks/${userId}`, {
+      method: data?.isBlocked ? 'DELETE' : 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    await loadProfile();
   };
 
   if (!data) return <div>Loading...</div>;
@@ -79,21 +94,34 @@ export default function Profile() {
         <div>
           {data.followers} Followers | {data.following} Following
         </div>
-        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-          <button onClick={toggleFollow} className="action-btn">
+        <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+          <button onClick={toggleFollow} className="action-btn" disabled={data.isBlocked || data.isBlockedBy}>
             {data.isFollowing ? 'Unfollow' : 'Follow'}
           </button>
-          <button onClick={() => router.push(`/chat/${data.user.id}`)} className="action-btn chat-btn">
+          <button
+            onClick={() => router.push(`/chat/${data.user.id}`)}
+            className="action-btn chat-btn"
+            disabled={data.isBlocked || data.isBlockedBy}
+          >
             💬 Chat
           </button>
+          <button onClick={toggleBlock} className="action-btn">
+            {data.isBlocked ? 'Unblock' : 'Block'}
+          </button>
         </div>
+        {data.isBlocked && <p style={{ marginTop: '10px', color: '#ffb4b4' }}>You blocked this user.</p>}
+        {data.isBlockedBy && <p style={{ marginTop: '10px', color: '#ffb4b4' }}>You cannot interact with this user right now.</p>}
       </div>
 
       <h3>User Posts</h3>
       <div>
         {data.posts.map((p) => (
           <div key={p.id} className="post">
-            <img src={p.image_url} alt="Post" />
+            {p.media_type === 'video' ? (
+              <video src={p.image_url} controls style={{ width: '100%', borderRadius: '12px' }} />
+            ) : (
+              <img src={p.image_url} alt="Post" />
+            )}
             <div className="caption">{p.caption}</div>
           </div>
         ))}

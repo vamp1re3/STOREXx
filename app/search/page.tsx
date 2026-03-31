@@ -109,6 +109,27 @@ export default function Search() {
             </div>
           </div>
         )}
+
+        {videos.length > 0 && (
+          <div>
+            <h2><FiFilm size={16} /> Videos</h2>
+            <div className="feed-list">
+              {videos.map((v) => (
+                <div key={`video-${v.id}`} className="post">
+                  <div className="user">
+                    <img src={v.profile_pic || 'https://via.placeholder.com/40'} alt="Profile" />
+                    <div>
+                      <b>{v.display_name || v.username}</b>
+                      <div style={{ color: '#8f9bc5', fontSize: '0.85em' }}>@{v.username}</div>
+                    </div>
+                  </div>
+                  <video src={v.image_url} controls style={{ width: '100%', borderRadius: '10px' }} />
+                  <p>{v.caption}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

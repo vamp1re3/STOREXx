@@ -14,6 +14,7 @@ interface Post {
   caption: string;
   like_count: number;
   is_liked: boolean;
+  media_type: 'image' | 'video';
 }
 
 export default function Home() {

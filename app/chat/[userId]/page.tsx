@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FiUpload, FiSend, FiArrowLeft } from 'react-icons/fi';
 
@@ -10,6 +10,7 @@ interface Message {
   receiver_id: number;
   content: string | null;
   image_url: string | null;
+  media_type: 'image' | 'video' | null;
   created_at: string;
 }
 
@@ -23,6 +24,16 @@ export default function Chat() {
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const router = useRouter();
 
+  const loadMessages = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const res = await fetch(`/api/messages/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    setMessages(Array.isArray(data) ? data : []);
+  }, [userId]);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -30,20 +41,9 @@ export default function Chat() {
       return;
     }
 
-    loadMessages();
-    // For simplicity, set username to userId
+    void loadMessages();
     setChatUserName(`User ${userId}`);
-  }, [userId, router]);
-
-  const loadMessages = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    const res = await fetch(`/api/messages/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setMessages(data);
-  };
+  }, [userId, router, loadMessages]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -94,8 +94,8 @@ export default function Chat() {
       });
 
       setMsgInput('');
-      setImagePreview(null);
-      loadMessages();
+      setMediaPreview(null);
+      await loadMessages();
     } catch (error) {
       console.error('Failed to send message:', error);
     }
@@ -165,7 +165,7 @@ export default function Chat() {
           placeholder="Type message..."
           onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
         />
-        <button onClick={sendMessage} disabled={uploading || (!msgInput.trim() && !imagePreview)}>
+        <button onClick={sendMessage} disabled={uploading || (!msgInput.trim() && !mediaPreview)}>
           <FiSend size={16} />
         </button>
       </div>

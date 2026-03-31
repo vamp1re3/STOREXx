@@ -53,6 +53,15 @@ export async function POST(req: NextRequest, context: { params: Promise<{ userId
       return NextResponse.json({ error: 'Message must have content or media' }, { status: 400 });
     }
 
+    const blocked = await pool.query(
+      'SELECT 1 FROM blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)',
+      [currentUserId, userId]
+    );
+
+    if (blocked.rows.length > 0) {
+      return NextResponse.json({ error: 'Message access blocked' }, { status: 403 });
+    }
+
     const type = media_type === 'video' ? 'video' : 'image';
 
     await pool.query(
