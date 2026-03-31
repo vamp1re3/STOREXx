@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiSettings, FiUser, FiLock, FiShield, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi';
+import { FiSettings, FiUser, FiLock, FiShield, FiTrash2, FiSave, FiArrowLeft, FiLogOut } from 'react-icons/fi';
 
 interface User {
   id: number;
@@ -156,6 +156,11 @@ export default function Settings() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    router.push('/');
   };
 
   const deleteAccount = async () => {
@@ -338,6 +343,14 @@ export default function Settings() {
                 </div>
                 <button onClick={changePassword} disabled={saving} className="save-btn">
                   <FiLock size={16} /> {saving ? 'Changing...' : 'Change Password'}
+                </button>
+              </div>
+
+              <div className="subsection">
+                <h3>Session</h3>
+                <p>Sign out from this device and return to the welcome screen.</p>
+                <button onClick={logout} className="save-btn">
+                  <FiLogOut size={16} /> Logout
                 </button>
               </div>
 

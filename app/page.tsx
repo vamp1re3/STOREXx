@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiLogOut, FiSettings, FiUpload, FiSearch } from 'react-icons/fi';
+import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiSettings, FiUpload, FiSearch } from 'react-icons/fi';
 
 interface Post {
   id: number;
@@ -102,12 +102,6 @@ export default function Home() {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setPosts([]);
-  };
-
   return (
     <div className="container">
       <div className="hero-card">
@@ -118,38 +112,22 @@ export default function Home() {
             Share photos, short clips, and private moments in a more polished Instagram-like feed.
           </p>
         </div>
-        <div className="status-pill">{token ? 'Signed in' : 'Guest mode'}</div>
+        {token && <div className="status-pill">Signed in</div>}
       </div>
 
-      <div className="navBar">
-        <Link href="/" className="navButton">
-          <FiRss size={16} /> Feed
-        </Link>
-        {token && (
+      {token && (
+        <div className="navBar">
+          <Link href="/" className="navButton">
+            <FiRss size={16} /> Feed
+          </Link>
           <Link href="/search" className="navButton">
             <FiSearch size={16} /> Search
           </Link>
-        )}
-        {token ? (
-          <>
-            <Link href="/settings" className="navButton">
-              <FiSettings size={16} /> Settings
-            </Link>
-            <button onClick={logout} className="navButton logout-button">
-              <FiLogOut size={16} /> Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link href="/login" className="navButton">
-              <FiLogIn size={16} /> Login
-            </Link>
-            <Link href="/signup" className="navButton">
-              <FiUserPlus size={16} /> Sign Up
-            </Link>
-          </>
-        )}
-      </div>
+          <Link href="/settings" className="navButton">
+            <FiSettings size={16} /> Settings
+          </Link>
+        </div>
+      )}
 
       {!token && (
         <div className="card auth-card" id="auth">
@@ -213,9 +191,6 @@ export default function Home() {
             <div className="button-group">
               <button onClick={post} disabled={posting || !mediaUrl.trim()}>
                 {posting ? 'Posting...' : 'Post'}
-              </button>
-              <button onClick={logout} className="logoutBtn">
-                <FiLogOut size={16} /> Logout
               </button>
             </div>
           </div>
