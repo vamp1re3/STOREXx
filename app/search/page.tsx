@@ -55,10 +55,12 @@ export default function Search() {
       <button onClick={() => router.push('/')} className="back-btn">
         <FiArrowLeft size={16} /> Back to Feed
       </button>
-      <h1><FiSearch size={26} /> Search</h1>
+      <div className="card search-shell">
+        <p className="eyebrow">Discover</p>
+        <h1><FiSearch size={26} /> Search</h1>
+        <p className="brand-subtitle">Find people, photo posts, and videos like a polished explore page.</p>
 
-      <div className="card">
-        <div className="message-input" style={{ padding: '10px' }}>
+        <div className="message-input" style={{ padding: '10px 0' }}>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -78,8 +80,21 @@ export default function Search() {
             <h2><FiUser size={16} /> Users</h2>
             <div className="profile-list">
               {users.map((u) => (
-                <div key={u.id} className="post" style={{ padding: '12px' }}>
-                  <Link href={`/profile/${u.id}`}>{u.display_name || u.username} (@{u.username})</Link>
+                <div key={u.id} className="post result-user-card" style={{ padding: '12px' }}>
+                  <div className="user">
+                    <Image
+                      src={u.profile_pic || '/default-avatar.svg'}
+                      alt="Profile"
+                      width={44}
+                      height={44}
+                      unoptimized
+                    />
+                    <div className="user-meta">
+                      <b>{u.display_name || u.username}</b>
+                      <span className="handle">@{u.username}</span>
+                    </div>
+                  </div>
+                  <Link href={`/profile/${u.id}`} className="navButton">View profile</Link>
                 </div>
               ))}
             </div>
@@ -94,15 +109,15 @@ export default function Search() {
                 <div key={p.id} className="post">
                   <div className="user">
                     <Image
-                      src={p.profile_pic || 'https://via.placeholder.com/40'}
+                      src={p.profile_pic || '/default-avatar.svg'}
                       alt="Profile"
                       width={40}
                       height={40}
                       unoptimized
                     />
-                    <div>
+                    <div className="user-meta">
                       <b>{p.display_name || p.username}</b>
-                      <div style={{ color: '#8f9bc5', fontSize: '0.85em' }}>@{p.username}</div>
+                      <span className="handle">@{p.username}</span>
                     </div>
                   </div>
                   {p.media_type === 'video' ? (
@@ -132,15 +147,15 @@ export default function Search() {
                 <div key={`video-${v.id}`} className="post">
                   <div className="user">
                     <Image
-                      src={v.profile_pic || 'https://via.placeholder.com/40'}
+                      src={v.profile_pic || '/default-avatar.svg'}
                       alt="Profile"
                       width={40}
                       height={40}
                       unoptimized
                     />
-                    <div>
+                    <div className="user-meta">
                       <b>{v.display_name || v.username}</b>
-                      <div style={{ color: '#8f9bc5', fontSize: '0.85em' }}>@{v.username}</div>
+                      <span className="handle">@{v.username}</span>
                     </div>
                   </div>
                   <video src={v.image_url} controls style={{ width: '100%', borderRadius: '10px' }} />

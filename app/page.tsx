@@ -110,7 +110,16 @@ export default function Home() {
 
   return (
     <div className="container">
-      <h1>HELKET</h1>
+      <div className="hero-card">
+        <div>
+          <p className="eyebrow">Luxury dark social</p>
+          <h1 className="brand-title">HELKET</h1>
+          <p className="brand-subtitle">
+            Share photos, short clips, and private moments in a more polished Instagram-like feed.
+          </p>
+        </div>
+        <div className="status-pill">{token ? 'Signed in' : 'Guest mode'}</div>
+      </div>
 
       <div className="navBar">
         <Link href="/" className="navButton">
@@ -143,20 +152,31 @@ export default function Home() {
       </div>
 
       {!token && (
-        <div className="card" id="auth">
-          <p>Please login or sign up to interact.</p>
-          <Link href="/login" className="navButton">
-            <FiLogIn size={16} /> Login
-          </Link>
-          <Link href="/signup" className="navButton">
-            <FiUserPlus size={16} /> Sign Up
-          </Link>
+        <div className="card auth-card" id="auth">
+          <p className="eyebrow">Welcome</p>
+          <h2>Login to unlock your feed</h2>
+          <p className="muted-text">Search users, upload posts, share videos, and send private messages once you sign in.</p>
+          <div className="button-group auth-actions">
+            <Link href="/login" className="navButton">
+              <FiLogIn size={16} /> Login
+            </Link>
+            <Link href="/signup" className="navButton">
+              <FiUserPlus size={16} /> Sign Up
+            </Link>
+          </div>
         </div>
       )}
 
       {token && (
         <>
-          <div className="card" id="postBox">
+          <div className="card composer-card" id="postBox">
+            <div className="composer-header">
+              <div>
+                <p className="eyebrow">Create</p>
+                <h3>New post</h3>
+              </div>
+              <span className="composer-hint">{mediaUrl ? 'Media ready' : 'Photo or video'}</span>
+            </div>
             <div className="file-upload">
               <label htmlFor="post-media-upload" className="upload-btn">
                 <FiUpload size={16} /> {uploading ? 'Uploading...' : mediaUrl ? 'Change Media' : 'Upload Media'}
@@ -190,12 +210,14 @@ export default function Home() {
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Caption (optional)"
             />
-            <button onClick={post} disabled={posting || !mediaUrl.trim()}>
-              {posting ? 'Posting...' : 'Post'}
-            </button>
-            <button onClick={logout} className="logoutBtn">
-              <FiLogOut size={16} /> Logout
-            </button>
+            <div className="button-group">
+              <button onClick={post} disabled={posting || !mediaUrl.trim()}>
+                {posting ? 'Posting...' : 'Post'}
+              </button>
+              <button onClick={logout} className="logoutBtn">
+                <FiLogOut size={16} /> Logout
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -225,17 +247,20 @@ export default function Home() {
             <div key={p.id} className="post">
               <div className="user">
                 <Image
-                  src={p.profile_pic || 'https://via.placeholder.com/40'}
+                  src={p.profile_pic || '/default-avatar.svg'}
                   alt="Profile"
                   width={40}
                   height={40}
                   unoptimized
                 />
-                <b>
-                  <Link href={`/profile/${p.user_id}`}>
-                    {p.display_name || p.username}
-                  </Link>
-                </b>
+                <div className="user-meta">
+                  <b>
+                    <Link href={`/profile/${p.user_id}`}>
+                      {p.display_name || p.username}
+                    </Link>
+                  </b>
+                  <span className="handle">@{p.username}</span>
+                </div>
               </div>
               {p.media_type === 'video' ? (
                 <video src={p.image_url} controls style={{ width: '100%', borderRadius: '12px' }} />

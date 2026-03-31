@@ -75,10 +75,12 @@ export default function Signup() {
   };
 
   return (
-    <div className="container">
-      <h1>HELKET</h1>
+    <div className="container auth-shell">
+      <div className="card auth-card">
+        <p className="eyebrow">Create account</p>
+        <h1 className="brand-title">Join HELKET</h1>
+        <p className="brand-subtitle">Set up your profile and start posting photos, videos, and private messages.</p>
 
-      <div className="card">
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -122,7 +124,7 @@ export default function Signup() {
           {profilePic && (
             <div className="preview">
               <Image
-                src={profilePic}
+                src={profilePic || '/default-avatar.svg'}
                 alt="Profile preview"
                 width={50}
                 height={50}

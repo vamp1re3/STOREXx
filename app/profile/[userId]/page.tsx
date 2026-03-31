@@ -80,27 +80,26 @@ export default function Profile() {
 
   return (
     <div className="container">
-      <button onClick={() => router.push('/')}>⬅ Back to Feed</button>
+      <button onClick={() => router.push('/')} className="back-btn">⬅ Back to Feed</button>
 
-      <div className="card">
+      <div className="card profile-hero">
         <div className="user">
           <Image
             id="profilePic"
-            src={data.user.profile_pic || 'https://via.placeholder.com/40'}
+            src={data.user.profile_pic || '/default-avatar.svg'}
             alt="Profile"
-            width={40}
-            height={40}
+            width={52}
+            height={52}
             unoptimized
           />
-          <div>
+          <div className="user-meta">
             <b>{data.user.display_name || data.user.username}</b>
-            <div style={{ fontSize: '0.9em', color: '#666', marginTop: '4px' }}>
-              @{data.user.username}
-            </div>
+            <span className="handle">@{data.user.username}</span>
           </div>
         </div>
-        <div>
-          {data.followers} Followers | {data.following} Following
+        <div className="stat-strip">
+          <span className="stat-pill"><strong>{data.followers}</strong> Followers</span>
+          <span className="stat-pill"><strong>{data.following}</strong> Following</span>
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
           <button onClick={toggleFollow} className="action-btn" disabled={data.isBlocked || data.isBlockedBy}>
