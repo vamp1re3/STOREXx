@@ -79,3 +79,7 @@ CREATE INDEX idx_messages_receiver_id ON messages(receiver_id);
 CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
 -- Composite index for conversation queries
 CREATE INDEX idx_messages_conversation ON messages(LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id), created_at DESC);
+
+-- Indexes for blocks table
+CREATE INDEX idx_blocks_blocker_id ON blocks(blocker_id);
+CREATE INDEX idx_blocks_blocked_id ON blocks(blocked_id);

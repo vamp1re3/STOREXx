@@ -2,11 +2,13 @@
 -- WARNING: This will DELETE ALL DATA! Use only for fresh setup or when you want to start over
 
 -- Drop tables in correct order (reverse of creation)
+DROP TABLE IF EXISTS blocks CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS likes CASCADE;
 DROP TABLE IF EXISTS follows CASCADE;
 DROP TABLE IF EXISTS posts CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS playing_with_neon CASCADE;
 
 -- Recreate the complete schema with all optimizations
 
@@ -31,6 +33,7 @@ CREATE TABLE posts (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   image_url VARCHAR(255) NOT NULL,
+  media_type VARCHAR(20) DEFAULT 'image' NOT NULL,
   caption TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -63,14 +66,24 @@ CREATE TABLE follows (
 CREATE INDEX idx_follows_follower_id ON follows(follower_id);
 CREATE INDEX idx_follows_following_id ON follows(following_id);
 
--- Messages table with image support
+-- Messages table with image and video support
 CREATE TABLE messages (
   id SERIAL PRIMARY KEY,
   sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   content TEXT,
   image_url VARCHAR(255),
+  media_type VARCHAR(20) DEFAULT 'image',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Blocks table
+CREATE TABLE blocks (
+  id SERIAL PRIMARY KEY,
+  blocker_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  blocked_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(blocker_id, blocked_id)
 );
 
 -- Indexes for messages table
@@ -79,6 +92,10 @@ CREATE INDEX idx_messages_receiver_id ON messages(receiver_id);
 CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
 -- Composite index for conversation queries
 CREATE INDEX idx_messages_conversation ON messages(LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id), created_at DESC);
+
+-- Indexes for blocks table
+CREATE INDEX idx_blocks_blocker_id ON blocks(blocker_id);
+CREATE INDEX idx_blocks_blocked_id ON blocks(blocked_id);
 
 -- Confirm recreation completed
 SELECT 'Database recreated successfully! All data has been deleted.' as status;

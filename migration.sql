@@ -146,5 +146,9 @@ CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
 -- Create composite index for conversations if it doesn't exist
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id), created_at DESC);
 
+-- Indexes for blocks lookups
+CREATE INDEX IF NOT EXISTS idx_blocks_blocker_id ON blocks(blocker_id);
+CREATE INDEX IF NOT EXISTS idx_blocks_blocked_id ON blocks(blocked_id);
+
 -- Verify the migration completed successfully
 SELECT 'Migration completed successfully!' as status;
