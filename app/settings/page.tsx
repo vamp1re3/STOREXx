@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSettings, FiUser, FiLock, FiShield, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi';
@@ -82,7 +83,7 @@ export default function Settings() {
       } else {
         alert('Upload failed: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       alert('Upload failed');
     } finally {
       setUploading(false);
@@ -113,7 +114,7 @@ export default function Settings() {
       } else {
         alert('Failed to update profile');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to update profile');
     } finally {
       setSaving(false);
@@ -150,7 +151,7 @@ export default function Settings() {
         const data = await res.json();
         alert('Failed to change password: ' + (data.error || 'Unknown error'));
       }
-    } catch (error) {
+    } catch {
       alert('Failed to change password');
     } finally {
       setSaving(false);
@@ -175,7 +176,7 @@ export default function Settings() {
       } else {
         alert('Failed to delete account');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to delete account');
     }
   };
@@ -265,7 +266,14 @@ export default function Settings() {
                   />
                   {profilePic && (
                     <div className="preview">
-                      <img src={profilePic} alt="Profile preview" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <Image
+                        src={profilePic}
+                        alt="Profile preview"
+                        width={80}
+                        height={80}
+                        unoptimized
+                        style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
                     </div>
                   )}
                 </div>

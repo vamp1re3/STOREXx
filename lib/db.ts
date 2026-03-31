@@ -15,11 +15,11 @@ const pool = new Pool({
 });
 
 // Test the connection
-pool.on('connect', (client) => {
+pool.on('connect', () => {
   console.log('Connected to Neon database');
 });
 
-pool.on('error', (err, client) => {
+pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
 });
 

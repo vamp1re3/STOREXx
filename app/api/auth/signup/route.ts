@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       [username, display_name || username, email, hashedPassword, profile_pic]
     );
     return NextResponse.json({ message: 'User created' });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'User already exists' }, { status: 400 });
   }
 }

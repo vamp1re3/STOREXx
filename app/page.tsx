@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiLogOut, FiSettings, FiUpload, FiSearch } from 'react-icons/fi';
@@ -70,7 +71,7 @@ export default function Home() {
       } else {
         alert('Upload failed: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       alert('Upload failed');
     } finally {
       setUploading(false);
@@ -170,7 +171,14 @@ export default function Home() {
               {mediaUrl && (
                 <div className="preview">
                   {mediaType === 'image' ? (
-                    <img src={mediaUrl} alt="Post preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                    <Image
+                      src={mediaUrl}
+                      alt="Post preview"
+                      width={100}
+                      height={100}
+                      unoptimized
+                      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                    />
                   ) : (
                     <video src={mediaUrl} style={{ width: '120px', height: '90px', borderRadius: '8px' }} controls />
                   )}
@@ -216,9 +224,12 @@ export default function Home() {
           {!loading && posts.map((p) => (
             <div key={p.id} className="post">
               <div className="user">
-                <img
+                <Image
                   src={p.profile_pic || 'https://via.placeholder.com/40'}
                   alt="Profile"
+                  width={40}
+                  height={40}
+                  unoptimized
                 />
                 <b>
                   <Link href={`/profile/${p.user_id}`}>
@@ -229,7 +240,14 @@ export default function Home() {
               {p.media_type === 'video' ? (
                 <video src={p.image_url} controls style={{ width: '100%', borderRadius: '12px' }} />
               ) : (
-                <img src={p.image_url} alt="Post" />
+                <Image
+                  src={p.image_url}
+                  alt="Post"
+                  width={800}
+                  height={800}
+                  unoptimized
+                  style={{ width: '100%', height: 'auto' }}
+                />
               )}
               <div className="caption">{p.caption}</div>
               <div className="actions">

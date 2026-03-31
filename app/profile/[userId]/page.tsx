@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -83,7 +84,14 @@ export default function Profile() {
 
       <div className="card">
         <div className="user">
-          <img id="profilePic" src={data.user.profile_pic || 'https://via.placeholder.com/40'} alt="Profile" />
+          <Image
+            id="profilePic"
+            src={data.user.profile_pic || 'https://via.placeholder.com/40'}
+            alt="Profile"
+            width={40}
+            height={40}
+            unoptimized
+          />
           <div>
             <b>{data.user.display_name || data.user.username}</b>
             <div style={{ fontSize: '0.9em', color: '#666', marginTop: '4px' }}>
@@ -120,7 +128,14 @@ export default function Profile() {
             {p.media_type === 'video' ? (
               <video src={p.image_url} controls style={{ width: '100%', borderRadius: '12px' }} />
             ) : (
-              <img src={p.image_url} alt="Post" />
+              <Image
+                src={p.image_url}
+                alt="Post"
+                width={800}
+                height={800}
+                unoptimized
+                style={{ width: '100%', height: 'auto' }}
+              />
             )}
             <div className="caption">{p.caption}</div>
           </div>

@@ -72,7 +72,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
       isBlocked,
       isBlockedBy: isBlocker,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

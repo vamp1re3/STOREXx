@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FiUpload, FiSend, FiArrowLeft } from 'react-icons/fi';
@@ -67,7 +68,7 @@ export default function Chat() {
       } else {
         alert('Upload failed: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       alert('Upload failed');
     } finally {
       setUploading(false);
@@ -124,10 +125,13 @@ export default function Chat() {
                   style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', marginTop: '8px' }}
                 />
               ) : (
-                <img
+                <Image
                   src={m.image_url}
                   alt="Shared media"
-                  style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', marginTop: '8px' }}
+                  width={200}
+                  height={200}
+                  unoptimized
+                  style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', marginTop: '8px', height: 'auto' }}
                 />
               )
             )}
@@ -140,7 +144,14 @@ export default function Chat() {
           {mediaType === 'video' ? (
             <video src={mediaPreview} controls style={{ maxWidth: '140px', maxHeight: '120px', borderRadius: '8px' }} />
           ) : (
-            <img src={mediaPreview} alt="Preview" style={{ maxWidth: '140px', maxHeight: '120px', borderRadius: '8px' }} />
+            <Image
+              src={mediaPreview}
+              alt="Preview"
+              width={140}
+              height={120}
+              unoptimized
+              style={{ maxWidth: '140px', maxHeight: '120px', borderRadius: '8px', height: 'auto' }}
+            />
           )}
           <button onClick={() => setMediaPreview(null)}>Remove</button>
         </div>

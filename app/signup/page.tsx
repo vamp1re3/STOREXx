@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiUserPlus, FiLogIn, FiUpload } from 'react-icons/fi';
@@ -35,7 +36,7 @@ export default function Signup() {
       } else {
         alert('Upload failed: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       alert('Upload failed');
     } finally {
       setUploading(false);
@@ -113,7 +114,14 @@ export default function Signup() {
           />
           {profilePic && (
             <div className="preview">
-              <img src={profilePic} alt="Profile preview" style={{ width: '50px', height: '50px', borderRadius: '50%' }} />
+              <Image
+                src={profilePic}
+                alt="Profile preview"
+                width={50}
+                height={50}
+                unoptimized
+                style={{ width: '50px', height: '50px', borderRadius: '50%' }}
+              />
             </div>
           )}
         </div>

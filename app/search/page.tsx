@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiSearch, FiUser, FiFilm, FiArrowLeft } from 'react-icons/fi';
@@ -42,7 +43,7 @@ export default function Search() {
       } else {
         setError(data.error || 'Search failed');
       }
-    } catch (err) {
+    } catch {
       setError('Search request failed');
     } finally {
       setLoading(false);
@@ -92,7 +93,13 @@ export default function Search() {
               {posts.map((p) => (
                 <div key={p.id} className="post">
                   <div className="user">
-                    <img src={p.profile_pic || 'https://via.placeholder.com/40'} alt="Profile" />
+                    <Image
+                      src={p.profile_pic || 'https://via.placeholder.com/40'}
+                      alt="Profile"
+                      width={40}
+                      height={40}
+                      unoptimized
+                    />
                     <div>
                       <b>{p.display_name || p.username}</b>
                       <div style={{ color: '#8f9bc5', fontSize: '0.85em' }}>@{p.username}</div>
@@ -101,7 +108,14 @@ export default function Search() {
                   {p.media_type === 'video' ? (
                     <video src={p.image_url} controls style={{ width: '100%', borderRadius: '10px' }} />
                   ) : (
-                    <img src={p.image_url} alt="Post" style={{ width: '100%', borderRadius: '10px' }} />
+                    <Image
+                      src={p.image_url}
+                      alt="Post"
+                      width={800}
+                      height={800}
+                      unoptimized
+                      style={{ width: '100%', height: 'auto', borderRadius: '10px' }}
+                    />
                   )}
                   <p>{p.caption}</p>
                 </div>
@@ -117,7 +131,13 @@ export default function Search() {
               {videos.map((v) => (
                 <div key={`video-${v.id}`} className="post">
                   <div className="user">
-                    <img src={v.profile_pic || 'https://via.placeholder.com/40'} alt="Profile" />
+                    <Image
+                      src={v.profile_pic || 'https://via.placeholder.com/40'}
+                      alt="Profile"
+                      width={40}
+                      height={40}
+                      unoptimized
+                    />
                     <div>
                       <b>{v.display_name || v.username}</b>
                       <div style={{ color: '#8f9bc5', fontSize: '0.85em' }}>@{v.username}</div>

@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
       [currentUserId, userId]
     );
     return NextResponse.json(result.rows);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ userId
       [currentUserId, userId, content || null, image_url || null, type]
     );
     return NextResponse.json({ message: 'Message sent' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

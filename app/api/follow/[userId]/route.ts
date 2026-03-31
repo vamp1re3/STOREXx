@@ -37,7 +37,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ userId
       );
     }
     return NextResponse.json({ message: 'Toggled follow' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

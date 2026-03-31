@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const token = jwt.sign({ id: user.rows[0].id }, jwtSecret, { expiresIn: '7d' });
     return NextResponse.json({ token });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

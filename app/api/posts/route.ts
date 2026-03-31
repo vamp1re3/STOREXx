@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       ORDER BY posts.created_at DESC
     `, [userId]);
     return NextResponse.json(result.rows);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       [userId, image_url, type, caption]
     );
     return NextResponse.json({ message: 'Posted' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
