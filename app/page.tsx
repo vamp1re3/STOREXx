@@ -64,12 +64,12 @@ export default function Home() {
         body: formData,
       });
 
-      const data = await res.json();
-      if (data.success) {
+      const data = (await res.json()) as { success?: boolean; url?: string; error?: string; details?: string };
+      if (res.ok && data.success && data.url) {
         setMediaUrl(data.url);
         setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
       } else {
-        alert('Upload failed: ' + data.error);
+        alert(`Upload failed: ${data.error || data.details || 'Please try a smaller file.'}`);
       }
     } catch {
       alert('Upload failed');

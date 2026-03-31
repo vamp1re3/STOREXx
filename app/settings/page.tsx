@@ -77,11 +77,11 @@ export default function Settings() {
         body: formData,
       });
 
-      const data = await res.json();
-      if (data.success) {
+      const data = (await res.json()) as { success?: boolean; url?: string; error?: string; details?: string };
+      if (res.ok && data.success && data.url) {
         setProfilePic(data.url);
       } else {
-        alert('Upload failed: ' + data.error);
+        alert(`Upload failed: ${data.error || data.details || 'Please try a smaller image.'}`);
       }
     } catch {
       alert('Upload failed');

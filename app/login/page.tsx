@@ -12,7 +12,7 @@ export default function Login() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      router.push('/');
+      router.replace('/');
     }
   }, [router]);
 
