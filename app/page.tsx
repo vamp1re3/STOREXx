@@ -311,7 +311,17 @@ export default function Home() {
             Share photos, short clips, and private moments in a polished mobile-first feed.
           </p>
         </div>
-        {isAuthenticated && <div className="status-pill">Session active</div>}
+        {isAuthenticated && (
+          <div className="header-actions">
+            <Link href="/chat" className="top-chat-button" aria-label="Open chats" title="Chats">
+              <FiMessageCircle size={18} />
+              {Object.values(unreadCounts).reduce((total, count) => total + count, 0) > 0 ? (
+                <span className="badge-dot top-chat-badge">{Object.values(unreadCounts).reduce((total, count) => total + count, 0)}</span>
+              ) : null}
+            </Link>
+            <div className="status-pill">Session active</div>
+          </div>
+        )}
       </div>
 
       {isAuthenticated && (

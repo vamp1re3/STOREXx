@@ -109,9 +109,14 @@ export default function Search() {
 
   return (
     <div className="container page-with-mobile-nav">
-      <button onClick={() => router.push('/')} className="back-btn">
-        <FiArrowLeft size={16} /> Back to Feed
-      </button>
+      <div className="top-bar-row">
+        <button onClick={() => router.push('/')} className="back-btn">
+          <FiArrowLeft size={16} /> Back to Feed
+        </button>
+        <Link href="/chat" className="top-chat-button" aria-label="Open chats" title="Chats">
+          <FiMessageCircle size={18} />
+        </Link>
+      </div>
       <div className="card search-shell">
         <p className="eyebrow">Discover</p>
         <h1><FiSearch size={26} /> Search</h1>

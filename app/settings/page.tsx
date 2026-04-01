@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiEye, FiEyeOff, FiLock, FiLogOut, FiSave, FiSettings, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiEye, FiEyeOff, FiLock, FiLogOut, FiMessageCircle, FiSave, FiSettings, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
 
 interface User {
   id: number;
@@ -243,11 +244,14 @@ export default function Settings() {
 
   return (
     <div className="container page-with-mobile-nav">
-      <div className="settings-header">
+      <div className="settings-header top-bar-row">
         <button onClick={() => router.push('/')} className="back-btn">
           <FiArrowLeft size={16} /> Back to Feed
         </button>
         <h1><FiSettings size={24} /> Settings</h1>
+        <Link href="/chat" className="top-chat-button" aria-label="Open chats" title="Chats">
+          <FiMessageCircle size={18} />
+        </Link>
       </div>
 
       <div className="settings-container">

@@ -1,8 +1,10 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { FiMessageCircle } from 'react-icons/fi';
 
 interface User {
   id: number;
@@ -105,7 +107,12 @@ export default function Profile() {
 
   return (
     <div className="container page-with-mobile-nav">
-      <button onClick={() => router.push('/')} className="back-btn">⬅ Back to Feed</button>
+      <div className="top-bar-row">
+        <button onClick={() => router.push('/')} className="back-btn">⬅ Back to Feed</button>
+        <Link href="/chat" className="top-chat-button" aria-label="Open chats" title="Chats">
+          <FiMessageCircle size={18} />
+        </Link>
+      </div>
 
       <div className="card profile-hero profile-page-card">
         <div className="user">
