@@ -41,7 +41,7 @@ export default function Home() {
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
       });
       const data = await res.json();
-      setPosts(data);
+      setPosts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load posts:', error);
     } finally {

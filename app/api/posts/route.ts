@@ -24,7 +24,9 @@ export async function GET(req: NextRequest) {
     const result = await pool.query(`
       SELECT posts.*, users.username, users.display_name, users.profile_pic,
       (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) as like_count,
-      CASE WHEN $1 IS NOT NULL AND EXISTS(SELECT 1 FROM likes WHERE likes.post_id = posts.id AND likes.user_id = $1) THEN true ELSE false END as is_liked
+      CASE WHEN EXISTS(
+        SELECT 1 FROM likes WHERE likes.post_id = posts.id AND likes.user_id = $1
+      ) THEN true ELSE false END as is_liked
       FROM posts
       JOIN users ON posts.user_id = users.id
       WHERE NOT EXISTS(
