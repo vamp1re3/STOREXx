@@ -118,7 +118,7 @@ textarea {
 }
 
 .password-field input {
-  padding-right: 88px;
+  padding-right: 46px;
 }
 
 .password-toggle {
@@ -126,11 +126,15 @@ textarea {
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: auto;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
   margin: 0;
-  padding: 6px 10px;
-  font-size: 0.8rem;
-  border-radius: 999px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, rgba(80, 31, 114, 0.95), rgba(17, 27, 54, 0.98));
 }
 

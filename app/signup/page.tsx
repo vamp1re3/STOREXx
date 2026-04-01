@@ -113,9 +113,14 @@ export default function Signup() {
             placeholder="Password"
             type={showPassword ? 'text' : 'password'}
           />
-          <button type="button" className="password-toggle" onClick={() => setShowPassword((value) => !value)}>
-            {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-            {showPassword ? 'Hide' : 'Show'}
+          <button
+            type="button"
+            className="password-toggle"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            title={showPassword ? 'Hide password' : 'Show password'}
+            onClick={() => setShowPassword((value) => !value)}
+          >
+            {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
           </button>
         </div>
         <div className="password-field">
@@ -125,9 +130,14 @@ export default function Signup() {
             placeholder="Confirm Password"
             type={showConfirmPassword ? 'text' : 'password'}
           />
-          <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword((value) => !value)}>
-            {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-            {showConfirmPassword ? 'Hide' : 'Show'}
+          <button
+            type="button"
+            className="password-toggle"
+            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+            title={showConfirmPassword ? 'Hide password' : 'Show password'}
+            onClick={() => setShowConfirmPassword((value) => !value)}
+          >
+            {showConfirmPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
           </button>
         </div>
 

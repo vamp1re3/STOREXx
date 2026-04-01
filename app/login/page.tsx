@@ -65,9 +65,14 @@ export default function Login() {
             placeholder="Password"
             type={showPassword ? 'text' : 'password'}
           />
-          <button type="button" className="password-toggle" onClick={() => setShowPassword((value) => !value)}>
-            {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-            {showPassword ? 'Hide' : 'Show'}
+          <button
+            type="button"
+            className="password-toggle"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            title={showPassword ? 'Hide password' : 'Show password'}
+            onClick={() => setShowPassword((value) => !value)}
+          >
+            {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
           </button>
         </div>
         {error && <p style={{ color: '#ffabab' }}>{error}</p>}

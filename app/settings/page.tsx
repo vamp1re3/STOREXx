@@ -343,9 +343,14 @@ export default function Settings() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                     />
-                    <button type="button" className="password-toggle" onClick={() => setShowCurrentPassword((value) => !value)}>
-                      {showCurrentPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                      {showCurrentPassword ? 'Hide' : 'Show'}
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                      title={showCurrentPassword ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowCurrentPassword((value) => !value)}
+                    >
+                      {showCurrentPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
                     </button>
                   </div>
                 </div>
@@ -357,9 +362,14 @@ export default function Settings() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                     />
-                    <button type="button" className="password-toggle" onClick={() => setShowNewPassword((value) => !value)}>
-                      {showNewPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                      {showNewPassword ? 'Hide' : 'Show'}
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                      title={showNewPassword ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowNewPassword((value) => !value)}
+                    >
+                      {showNewPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
                     </button>
                   </div>
                 </div>
@@ -371,9 +381,14 @@ export default function Settings() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                     />
-                    <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword((value) => !value)}>
-                      {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                      {showConfirmPassword ? 'Hide' : 'Show'}
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowConfirmPassword((value) => !value)}
+                    >
+                      {showConfirmPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
                     </button>
                   </div>
                 </div>
