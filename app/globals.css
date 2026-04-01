@@ -513,6 +513,23 @@ button:disabled {
   padding-bottom: 88px;
 }
 
+.mobile-bottom-nav .navButton,
+.mobile-bottom-nav button {
+  flex: 1;
+  margin: 0;
+  min-height: 56px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 6px;
+  font-size: 0.74rem;
+  line-height: 1.1;
+}
+
+.mobile-bottom-nav .navButton svg,
+.mobile-bottom-nav button svg {
+  flex-shrink: 0;
+}
+
 .chat-header-card {
   margin-bottom: 14px;
 }

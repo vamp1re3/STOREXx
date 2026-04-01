@@ -6,9 +6,12 @@ import Link from 'next/link';
 import {
   FiBookmark,
   FiHeart,
+  FiHome,
   FiLogIn,
   FiMessageCircle,
   FiMessageSquare,
+  FiSearch,
+  FiSettings,
   FiTrash2,
   FiUpload,
   FiUserPlus,
@@ -506,9 +509,18 @@ export default function Home() {
 
       {isAuthenticated && (
         <div className="mobile-bottom-nav">
-          <Link href="/" className="navButton">Feed</Link>
-          <Link href="/search" className="navButton">Search</Link>
-          <Link href="/settings" className="navButton">Settings</Link>
+          <Link href="/" className="navButton">
+            <FiHome size={16} />
+            <span>Feed</span>
+          </Link>
+          <Link href="/search" className="navButton">
+            <FiSearch size={16} />
+            <span>Search</span>
+          </Link>
+          <Link href="/settings" className="navButton">
+            <FiSettings size={16} />
+            <span>Settings</span>
+          </Link>
         </div>
       )}
     </div>

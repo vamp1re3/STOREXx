@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FiArrowLeft, FiSend, FiUpload } from 'react-icons/fi';
+import { FiArrowLeft, FiHome, FiSearch, FiSend, FiSettings, FiUpload } from 'react-icons/fi';
 
 interface Message {
   id: number;
@@ -244,9 +244,18 @@ export default function Chat() {
       </div>
 
       <div className="mobile-bottom-nav">
-        <button onClick={() => router.push('/')} className="navButton">Feed</button>
-        <button onClick={() => router.push('/search')} className="navButton">Search</button>
-        <button onClick={() => router.push('/settings')} className="navButton">Settings</button>
+        <button onClick={() => router.push('/')} className="navButton">
+          <FiHome size={16} />
+          <span>Feed</span>
+        </button>
+        <button onClick={() => router.push('/search')} className="navButton">
+          <FiSearch size={16} />
+          <span>Search</span>
+        </button>
+        <button onClick={() => router.push('/settings')} className="navButton">
+          <FiSettings size={16} />
+          <span>Settings</span>
+        </button>
       </div>
     </div>
   );

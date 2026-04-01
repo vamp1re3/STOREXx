@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FiArrowLeft, FiFilm, FiMessageCircle, FiSearch, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiFilm, FiHome, FiMessageCircle, FiSearch, FiSettings, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 
 interface UserResult {
@@ -248,9 +248,18 @@ export default function Search() {
       </div>
 
       <div className="mobile-bottom-nav">
-        <Link href="/" className="navButton">Feed</Link>
-        <Link href="/search" className="navButton">Search</Link>
-        <Link href="/settings" className="navButton">Settings</Link>
+        <Link href="/" className="navButton">
+          <FiHome size={16} />
+          <span>Feed</span>
+        </Link>
+        <Link href="/search" className="navButton">
+          <FiSearch size={16} />
+          <span>Search</span>
+        </Link>
+        <Link href="/settings" className="navButton">
+          <FiSettings size={16} />
+          <span>Settings</span>
+        </Link>
       </div>
     </div>
   );

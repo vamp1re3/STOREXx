@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiEye, FiEyeOff, FiLock, FiLogOut, FiMessageCircle, FiSave, FiSettings, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiEye, FiEyeOff, FiHome, FiLock, FiLogOut, FiMessageCircle, FiSave, FiSearch, FiSettings, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
 
 interface User {
   id: number;
@@ -422,9 +422,18 @@ export default function Settings() {
       </div>
 
       <div className="mobile-bottom-nav">
-        <button onClick={() => router.push('/')} className="navButton">Feed</button>
-        <button onClick={() => router.push('/search')} className="navButton">Search</button>
-        <button onClick={() => router.push('/settings')} className="navButton">Settings</button>
+        <button onClick={() => router.push('/')} className="navButton">
+          <FiHome size={16} />
+          <span>Feed</span>
+        </button>
+        <button onClick={() => router.push('/search')} className="navButton">
+          <FiSearch size={16} />
+          <span>Search</span>
+        </button>
+        <button onClick={() => router.push('/settings')} className="navButton">
+          <FiSettings size={16} />
+          <span>Settings</span>
+        </button>
       </div>
     </div>
   );
