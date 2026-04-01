@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiLogIn, FiUserPlus } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiLogIn, FiUserPlus } from 'react-icons/fi';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -57,7 +58,18 @@ export default function Login() {
         <p className="brand-subtitle">Sign in to your luxury dark feed, private chats, and media sharing.</p>
 
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" />
-        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" />
+        <div className="password-field">
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            type={showPassword ? 'text' : 'password'}
+          />
+          <button type="button" className="password-toggle" onClick={() => setShowPassword((value) => !value)}>
+            {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
         {error && <p style={{ color: '#ffabab' }}>{error}</p>}
         <button className="loginBtn" onClick={() => void login()} disabled={loading}>
           <FiLogIn size={18} /> {loading ? 'Logging in...' : 'Login'}

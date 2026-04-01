@@ -113,6 +113,27 @@ textarea {
   resize: vertical;
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 88px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(80, 31, 114, 0.95), rgba(17, 27, 54, 0.98));
+}
+
 input::placeholder,
 textarea::placeholder {
   color: #8f87a8;

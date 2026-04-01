@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiLock, FiLogOut, FiSave, FiSettings, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiEye, FiEyeOff, FiLock, FiLogOut, FiSave, FiSettings, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
 
 interface User {
   id: number;
@@ -31,6 +31,9 @@ export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const router = useRouter();
 
@@ -334,15 +337,45 @@ export default function Settings() {
                 <h3>Change Password</h3>
                 <div className="form-group">
                   <label>Current Password</label>
-                  <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                  <div className="password-field">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                    <button type="button" className="password-toggle" onClick={() => setShowCurrentPassword((value) => !value)}>
+                      {showCurrentPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                      {showCurrentPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>New Password</label>
-                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                  <div className="password-field">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <button type="button" className="password-toggle" onClick={() => setShowNewPassword((value) => !value)}>
+                      {showNewPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                      {showNewPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Confirm New Password</label>
-                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                  <div className="password-field">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                    <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword((value) => !value)}>
+                      {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                      {showConfirmPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
                 <button onClick={changePassword} disabled={saving} className="save-btn">
                   <FiLock size={16} /> {saving ? 'Changing...' : 'Change Password'}

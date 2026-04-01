@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiLogIn, FiUpload, FiUserPlus } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiLogIn, FiUpload, FiUserPlus } from 'react-icons/fi';
 
 export default function Signup() {
   const [username, setUsername] = useState('');
@@ -11,6 +11,8 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePic, setProfilePic] = useState('');
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -104,8 +106,30 @@ export default function Signup() {
         <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
         <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display Name (optional)" />
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" />
-        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" />
-        <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm Password" type="password" />
+        <div className="password-field">
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            type={showPassword ? 'text' : 'password'}
+          />
+          <button type="button" className="password-toggle" onClick={() => setShowPassword((value) => !value)}>
+            {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
+        <div className="password-field">
+          <input
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm Password"
+            type={showConfirmPassword ? 'text' : 'password'}
+          />
+          <button type="button" className="password-toggle" onClick={() => setShowConfirmPassword((value) => !value)}>
+            {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+            {showConfirmPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
 
         <div className="file-upload">
           <label htmlFor="profile-pic-upload" className="upload-btn">
