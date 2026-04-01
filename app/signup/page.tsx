@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUserPlus, FiLogIn, FiUpload } from 'react-icons/fi';
+import { FiLogIn, FiUpload, FiUserPlus } from 'react-icons/fi';
 
 export default function Signup() {
   const [username, setUsername] = useState('');
@@ -13,13 +13,25 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [profilePic, setProfilePic] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      router.replace('/');
-    }
+    const restoreSession = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        router.replace('/');
+        return;
+      }
+
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        router.replace('/');
+      }
+    };
+
+    void restoreSession();
   }, [router]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,10 +53,10 @@ export default function Signup() {
       if (res.ok && data.success && data.url) {
         setProfilePic(data.url);
       } else {
-        alert(`Upload failed: ${data.error || data.details || 'Please try a smaller image.'}`);
+        setError(data.error || data.details || 'Please try a smaller image.');
       }
     } catch {
-      alert('Upload failed');
+      setError('Upload failed');
     } finally {
       setUploading(false);
     }
@@ -52,9 +64,13 @@ export default function Signup() {
 
   const signup = async () => {
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
+
+    setLoading(true);
+    setError('');
+
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -63,15 +79,19 @@ export default function Signup() {
         display_name: displayName,
         email,
         password,
-        profile_pic: profilePic
+        profile_pic: profilePic,
       }),
     });
-    if (res.ok) {
-      alert('Account created');
-      router.push('/login');
+
+    const data = await res.json();
+    if (res.ok && data.token) {
+      localStorage.setItem('token', data.token);
+      router.push('/');
     } else {
-      alert('Error creating account');
+      setError(data.error || 'Error creating account');
     }
+
+    setLoading(false);
   };
 
   return (
@@ -81,46 +101,17 @@ export default function Signup() {
         <h1 className="brand-title">Join HELKET</h1>
         <p className="brand-subtitle">Set up your profile and start posting photos, videos, and private messages.</p>
 
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
-        />
-        <input
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="Display Name (optional)"
-        />
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          type="email"
-        />
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          type="password"
-        />
-        <input
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm Password"
-          type="password"
-        />
+        <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+        <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display Name (optional)" />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" />
+        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" />
+        <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm Password" type="password" />
 
         <div className="file-upload">
           <label htmlFor="profile-pic-upload" className="upload-btn">
             <FiUpload size={16} /> {uploading ? 'Uploading...' : 'Upload Profile Picture'}
           </label>
-          <input
-            id="profile-pic-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-          />
+          <input id="profile-pic-upload" type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
           {profilePic && (
             <div className="preview">
               <Image
@@ -135,8 +126,10 @@ export default function Signup() {
           )}
         </div>
 
-        <button className="signupBtn" onClick={signup}>
-          <FiUserPlus size={18} /> Sign Up
+        {error && <p style={{ color: '#ffabab' }}>{error}</p>}
+
+        <button className="signupBtn" onClick={() => void signup()} disabled={loading}>
+          <FiUserPlus size={18} /> {loading ? 'Creating account...' : 'Sign Up'}
         </button>
         <button className="loginBtn" onClick={() => router.push('/login')}>
           <FiLogIn size={18} /> Login

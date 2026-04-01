@@ -1,41 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import pool from '../../../../lib/db';
-
-function getUserId(req: NextRequest): number | null {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader) return null;
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
-    return decoded.id;
-  } catch {
-    return null;
-  }
-}
+import { authenticate } from '../../../../lib/auth';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ userId: string }> }) {
   try {
-    const currentUserId = getUserId(req);
-    if (!currentUserId) {
+    const authUser = authenticate(req);
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
     const { userId } = await context.params;
-    const exists = await pool.query(
-      'SELECT * FROM follows WHERE follower_id=$1 AND following_id=$2',
-      [currentUserId, userId]
-    );
-    if (exists.rows.length === 0) {
-      await pool.query(
-        'INSERT INTO follows (follower_id, following_id) VALUES ($1, $2)',
-        [currentUserId, userId]
-      );
-    } else {
-      await pool.query(
-        'DELETE FROM follows WHERE follower_id=$1 AND following_id=$2',
-        [currentUserId, userId]
-      );
+    const targetUserId = Number(userId);
+
+    if (targetUserId === authUser.id) {
+      return NextResponse.json({ error: 'You cannot follow yourself' }, { status: 400 });
     }
+
+    const exists = await pool.query(
+      'SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2',
+      [authUser.id, targetUserId]
+    );
+
+    if (exists.rows.length === 0) {
+      await pool.query('INSERT INTO follows (follower_id, following_id) VALUES ($1, $2)', [authUser.id, targetUserId]);
+    } else {
+      await pool.query('DELETE FROM follows WHERE follower_id=$1 AND following_id=$2', [authUser.id, targetUserId]);
+    }
+
     return NextResponse.json({ message: 'Toggled follow' });
   } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

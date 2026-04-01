@@ -1,29 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import pool from '../../../../lib/db';
-
-function getUserId(req: NextRequest): number | null {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader) return null;
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
-    return decoded.id;
-  } catch {
-    return null;
-  }
-}
+import { authenticate } from '../../../../lib/auth';
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = getUserId(req);
-    if (!userId) {
+    const authUser = authenticate(req);
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await pool.query(
-      'SELECT id, username, display_name, email, profile_pic, created_at FROM users WHERE id=$1',
-      [userId]
+      'SELECT id, username, display_name, bio, is_private, email, profile_pic, created_at FROM users WHERE id=$1',
+      [authUser.id]
     );
 
     if (user.rows.length === 0) {

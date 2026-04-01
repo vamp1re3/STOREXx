@@ -1,34 +1,52 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiLogIn, FiUserPlus } from 'react-icons/fi';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      router.replace('/');
-    }
+    const restoreSession = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        router.replace('/');
+        return;
+      }
+
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        router.replace('/');
+      }
+    };
+
+    void restoreSession();
   }, [router]);
 
   const login = async () => {
+    setLoading(true);
+    setError('');
+
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
+
     const data = await res.json();
     if (data.token) {
       localStorage.setItem('token', data.token);
       router.push('/');
     } else {
-      alert('Login failed');
+      setError(data.error || 'Login failed');
     }
+
+    setLoading(false);
   };
 
   return (
@@ -38,19 +56,11 @@ export default function Login() {
         <h1 className="brand-title">HELKET</h1>
         <p className="brand-subtitle">Sign in to your luxury dark feed, private chats, and media sharing.</p>
 
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-        />
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          type="password"
-        />
-        <button className="loginBtn" onClick={login}>
-          <FiLogIn size={18} /> Login
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" />
+        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" />
+        {error && <p style={{ color: '#ffabab' }}>{error}</p>}
+        <button className="loginBtn" onClick={() => void login()} disabled={loading}>
+          <FiLogIn size={18} /> {loading ? 'Logging in...' : 'Login'}
         </button>
         <button className="signupBtn" onClick={() => router.push('/signup')}>
           <FiUserPlus size={18} /> Sign Up

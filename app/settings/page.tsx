@@ -1,60 +1,95 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiSettings, FiUser, FiLock, FiShield, FiTrash2, FiSave, FiArrowLeft, FiLogOut } from 'react-icons/fi';
+import { FiArrowLeft, FiLock, FiLogOut, FiSave, FiSettings, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
 
 interface User {
   id: number;
   username: string;
   display_name: string;
+  bio?: string;
+  is_private?: boolean;
   profile_pic: string;
   email: string;
 }
 
 export default function Settings() {
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
 
-  // Profile settings
   const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
   const [profilePic, setProfilePic] = useState('');
   const [uploading, setUploading] = useState(false);
-
-  // Privacy settings
   const [isPrivate, setIsPrivate] = useState(false);
 
-  // Account settings
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const router = useRouter();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
+  const getHeaders = (includeJson = false): HeadersInit => {
+    const headers: HeadersInit = {};
+    if (includeJson) {
+      headers['Content-Type'] = 'application/json';
     }
-    loadUserData();
-  }, [router]);
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  };
 
-  const loadUserData = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+  useEffect(() => {
+    const verifySession = async () => {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        setToken(storedToken);
+      }
 
-    try {
       const res = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: storedToken ? { Authorization: `Bearer ${storedToken}` } : {},
       });
+
+      if (!res.ok) {
+        router.replace('/login');
+        return;
+      }
+
       const userData = await res.json();
       setUser(userData);
       setDisplayName(userData.display_name || '');
+      setBio(userData.bio || '');
       setProfilePic(userData.profile_pic || '');
+      setIsPrivate(Boolean(userData.is_private));
+      setLoading(false);
+    };
+
+    void verifySession();
+  }, [router]);
+
+  const loadUserData = async () => {
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: getHeaders(),
+      });
+
+      if (!res.ok) {
+        router.replace('/login');
+        return;
+      }
+
+      const userData = await res.json();
+      setUser(userData);
+      setDisplayName(userData.display_name || '');
+      setBio(userData.bio || '');
+      setProfilePic(userData.profile_pic || '');
+      setIsPrivate(Boolean(userData.is_private));
     } catch (error) {
       console.error('Failed to load user data:', error);
     } finally {
@@ -74,6 +109,7 @@ export default function Settings() {
 
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: getHeaders(),
         body: formData,
       });
 
@@ -95,24 +131,23 @@ export default function Settings() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/profile/update', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getHeaders(true),
         body: JSON.stringify({
           display_name: displayName,
           profile_pic: profilePic,
+          bio,
+          is_private: isPrivate,
         }),
       });
 
       if (res.ok) {
-        alert('Profile updated successfully!');
-        loadUserData();
+        alert('Profile updated successfully.');
+        await loadUserData();
       } else {
-        alert('Failed to update profile');
+        const data = await res.json();
+        alert(data.error || 'Failed to update profile');
       }
     } catch {
       alert('Failed to update profile');
@@ -129,13 +164,9 @@ export default function Settings() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/auth/change-password', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getHeaders(true),
         body: JSON.stringify({
           current_password: currentPassword,
           new_password: newPassword,
@@ -143,13 +174,13 @@ export default function Settings() {
       });
 
       if (res.ok) {
-        alert('Password changed successfully!');
+        alert('Password changed successfully.');
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
       } else {
         const data = await res.json();
-        alert('Failed to change password: ' + (data.error || 'Unknown error'));
+        alert(`Failed to change password: ${data.error || 'Unknown error'}`);
       }
     } catch {
       alert('Failed to change password');
@@ -158,7 +189,8 @@ export default function Settings() {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
     localStorage.removeItem('token');
     router.push('/');
   };
@@ -169,17 +201,17 @@ export default function Settings() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/auth/delete-account', {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: getHeaders(),
       });
 
       if (res.ok) {
         localStorage.removeItem('token');
         router.push('/');
       } else {
-        alert('Failed to delete account');
+        const data = await res.json();
+        alert(data.error || 'Failed to delete account');
       }
     } catch {
       alert('Failed to delete account');
@@ -207,7 +239,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="container">
+    <div className="container page-with-mobile-nav">
       <div className="settings-header">
         <button onClick={() => router.push('/')} className="back-btn">
           <FiArrowLeft size={16} /> Back to Feed
@@ -217,22 +249,13 @@ export default function Settings() {
 
       <div className="settings-container">
         <div className="settings-tabs">
-          <button
-            className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
-          >
+          <button className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
             <FiUser size={16} /> Profile
           </button>
-          <button
-            className={`tab-btn ${activeTab === 'privacy' ? 'active' : ''}`}
-            onClick={() => setActiveTab('privacy')}
-          >
+          <button className={`tab-btn ${activeTab === 'privacy' ? 'active' : ''}`} onClick={() => setActiveTab('privacy')}>
             <FiShield size={16} /> Privacy
           </button>
-          <button
-            className={`tab-btn ${activeTab === 'account' ? 'active' : ''}`}
-            onClick={() => setActiveTab('account')}
-          >
+          <button className={`tab-btn ${activeTab === 'account' ? 'active' : ''}`} onClick={() => setActiveTab('account')}>
             <FiLock size={16} /> Account
           </button>
         </div>
@@ -249,11 +272,13 @@ export default function Settings() {
 
               <div className="form-group">
                 <label>Display Name</label>
-                <input
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your display name"
-                />
+                <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Enter your display name" />
+              </div>
+
+              <div className="form-group">
+                <label>Bio</label>
+                <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell people a little about yourself" maxLength={280} />
+                <small>{bio.length}/280 characters</small>
               </div>
 
               <div className="form-group">
@@ -262,13 +287,7 @@ export default function Settings() {
                   <label htmlFor="profile-pic-upload" className="upload-btn">
                     {uploading ? 'Uploading...' : profilePic ? 'Change Picture' : 'Upload Picture'}
                   </label>
-                  <input
-                    id="profile-pic-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    style={{ display: 'none' }}
-                  />
+                  <input id="profile-pic-upload" type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                   {profilePic && (
                     <div className="preview">
                       <Image
@@ -295,18 +314,14 @@ export default function Settings() {
               <h2>Privacy Settings</h2>
               <div className="form-group">
                 <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={isPrivate}
-                    onChange={(e) => setIsPrivate(e.target.checked)}
-                  />
+                  <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
                   Private Account
                 </label>
-                <small>When enabled, only approved followers can see your posts</small>
+                <small>When enabled, only followers can view your posts and videos.</small>
               </div>
 
-              <button onClick={() => alert('Privacy settings saved!')} className="save-btn">
-                <FiSave size={16} /> Save Privacy Settings
+              <button onClick={saveProfile} disabled={saving} className="save-btn">
+                <FiSave size={16} /> {saving ? 'Saving...' : 'Save Privacy Settings'}
               </button>
             </div>
           )}
@@ -319,27 +334,15 @@ export default function Settings() {
                 <h3>Change Password</h3>
                 <div className="form-group">
                   <label>Current Password</label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                  />
+                  <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label>New Password</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label>Confirm New Password</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                 </div>
                 <button onClick={changePassword} disabled={saving} className="save-btn">
                   <FiLock size={16} /> {saving ? 'Changing...' : 'Change Password'}
@@ -348,7 +351,7 @@ export default function Settings() {
 
               <div className="subsection">
                 <h3>Session</h3>
-                <p>Sign out from this device and return to the welcome screen.</p>
+                <p>Sign out from this device and keep your profile secure.</p>
                 <button onClick={logout} className="save-btn">
                   <FiLogOut size={16} /> Logout
                 </button>
@@ -364,6 +367,12 @@ export default function Settings() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mobile-bottom-nav">
+        <button onClick={() => router.push('/')} className="navButton">Feed</button>
+        <button onClick={() => router.push('/search')} className="navButton">Search</button>
+        <button onClick={() => router.push('/settings')} className="navButton">Settings</button>
       </div>
     </div>
   );

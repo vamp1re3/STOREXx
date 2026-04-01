@@ -1,46 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import pool from '../../../../lib/db';
-
-function getUserId(req: NextRequest): number | null {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader) return null;
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
-    return decoded.id;
-  } catch {
-    return null;
-  }
-}
+import { authenticate, clearSessionCookie } from '../../../../lib/auth';
 
 export async function DELETE(req: NextRequest) {
   try {
-    const userId = getUserId(req);
-    if (!userId) {
+    const authUser = authenticate(req);
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Start a transaction to delete all user data
     const client = await pool.connect();
 
     try {
       await client.query('BEGIN');
+      await client.query('DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1', [authUser.id]);
+      await client.query('DELETE FROM likes WHERE user_id = $1', [authUser.id]);
+      await client.query('DELETE FROM follows WHERE follower_id = $1 OR following_id = $1', [authUser.id]);
+      await client.query('DELETE FROM bookmarks WHERE user_id = $1', [authUser.id]);
+      await client.query('DELETE FROM comments WHERE user_id = $1', [authUser.id]);
+      await client.query('DELETE FROM posts WHERE user_id = $1', [authUser.id]);
 
-      // Delete user's messages
-      await client.query('DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1', [userId]);
-
-      // Delete user's likes
-      await client.query('DELETE FROM likes WHERE user_id = $1', [userId]);
-
-      // Delete user's follows (both following and followers)
-      await client.query('DELETE FROM follows WHERE follower_id = $1 OR following_id = $1', [userId]);
-
-      // Delete user's posts
-      await client.query('DELETE FROM posts WHERE user_id = $1', [userId]);
-
-      // Finally, delete the user
-      const result = await client.query('DELETE FROM users WHERE id = $1', [userId]);
+      const result = await client.query('DELETE FROM users WHERE id = $1', [authUser.id]);
 
       if (result.rowCount === 0) {
         await client.query('ROLLBACK');
@@ -49,7 +29,9 @@ export async function DELETE(req: NextRequest) {
 
       await client.query('COMMIT');
 
-      return NextResponse.json({ success: true, message: 'Account deleted successfully' });
+      const response = NextResponse.json({ success: true, message: 'Account deleted successfully' });
+      clearSessionCookie(response);
+      return response;
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;

@@ -10,16 +10,17 @@ export async function POST(req: NextRequest, context: { params: Promise<{ postId
     }
 
     const { postId } = await context.params;
-    const exists = await pool.query('SELECT 1 FROM likes WHERE user_id=$1 AND post_id=$2', [authUser.id, postId]);
+    const exists = await pool.query('SELECT 1 FROM bookmarks WHERE user_id = $1 AND post_id = $2', [authUser.id, postId]);
 
     if (exists.rows.length === 0) {
-      await pool.query('INSERT INTO likes (user_id, post_id) VALUES ($1, $2)', [authUser.id, postId]);
-    } else {
-      await pool.query('DELETE FROM likes WHERE user_id=$1 AND post_id=$2', [authUser.id, postId]);
+      await pool.query('INSERT INTO bookmarks (user_id, post_id) VALUES ($1, $2)', [authUser.id, postId]);
+      return NextResponse.json({ success: true, saved: true });
     }
 
-    return NextResponse.json({ message: 'Toggled like' });
-  } catch {
+    await pool.query('DELETE FROM bookmarks WHERE user_id = $1 AND post_id = $2', [authUser.id, postId]);
+    return NextResponse.json({ success: true, saved: false });
+  } catch (error) {
+    console.error('Bookmark toggle error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

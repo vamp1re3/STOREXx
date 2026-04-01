@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
+import { authenticate } from '../../../lib/auth';
+import { checkRateLimit, getRequestKey } from '../../../lib/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -12,6 +14,15 @@ export async function POST(req: NextRequest) {
     const fileEntry = formData.get('file');
     const requestedType = String(formData.get('type') ?? 'general');
     const type = allowedUploadTypes.has(requestedType) ? requestedType : 'general';
+
+    const rate = checkRateLimit(getRequestKey(req, `upload:${type}`), 20, 10 * 60_000);
+    if (!rate.allowed) {
+      return NextResponse.json({ error: 'Too many uploads. Please wait a few minutes before trying again.' }, { status: 429 });
+    }
+
+    if ((type === 'post' || type === 'chat') && !authenticate(req)) {
+      return NextResponse.json({ error: 'You must be signed in to upload this file' }, { status: 401 });
+    }
 
     if (!(fileEntry instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });

@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FiUpload, FiSend, FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiSend, FiUpload } from 'react-icons/fi';
 
 interface Message {
   id: number;
@@ -15,36 +15,88 @@ interface Message {
   created_at: string;
 }
 
+interface ChatUser {
+  id: number;
+  username: string;
+  display_name: string;
+  profile_pic: string | null;
+}
+
 export default function Chat() {
   const { userId } = useParams();
+  const [token, setToken] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [msgInput, setMsgInput] = useState('');
-  const [chatUserName, setChatUserName] = useState('');
+  const [chatUser, setChatUser] = useState<ChatUser | null>(null);
   const [uploading, setUploading] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+  const endRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
+  const getHeaders = useCallback((includeJson = false): HeadersInit => {
+    const headers: HeadersInit = {};
+    if (includeJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  }, [token]);
+
   const loadMessages = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
     const res = await fetch(`/api/messages/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: getHeaders(),
     });
+
+    if (!res.ok) {
+      return;
+    }
+
     const data = await res.json();
-    setMessages(Array.isArray(data) ? data : []);
-  }, [userId]);
+    setMessages(Array.isArray(data.messages) ? data.messages : []);
+    setChatUser(data.user || null);
+  }, [getHeaders, userId]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
+    const verifySession = async () => {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        setToken(storedToken);
+        setReady(true);
+        return;
+      }
+
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) {
+        router.replace('/login');
+        return;
+      }
+
+      setReady(true);
+    };
+
+    void verifySession();
+  }, [router]);
+
+  useEffect(() => {
+    if (!ready) {
       return;
     }
 
     void loadMessages();
-    setChatUserName(`User ${userId}`);
-  }, [userId, router, loadMessages]);
+    const interval = window.setInterval(() => {
+      void loadMessages();
+    }, 4000);
+
+    return () => window.clearInterval(interval);
+  }, [ready, loadMessages]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -58,6 +110,7 @@ export default function Chat() {
 
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: getHeaders(),
         body: formData,
       });
 
@@ -76,9 +129,6 @@ export default function Chat() {
   };
 
   const sendMessage = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     const content = msgInput.trim();
     const mediaUrl = mediaPreview;
 
@@ -87,10 +137,7 @@ export default function Chat() {
     try {
       await fetch(`/api/messages/${userId}`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(true),
         body: JSON.stringify({ content: content || null, image_url: mediaUrl, media_type: mediaType }),
       });
 
@@ -103,30 +150,44 @@ export default function Chat() {
   };
 
   return (
-    <div className="container">
+    <div className="container page-with-mobile-nav">
       <button onClick={() => router.push('/')} className="back-btn">
         <FiArrowLeft size={16} /> Back to Feed
       </button>
 
-      <h2>Chat with {chatUserName}</h2>
+      <div className="card chat-header-card">
+        <div className="user">
+          <Image
+            src={chatUser?.profile_pic || '/default-avatar.svg'}
+            alt="Chat profile"
+            width={48}
+            height={48}
+            unoptimized
+          />
+          <div className="user-meta">
+            <b>{chatUser?.display_name || chatUser?.username || `User ${userId}`}</b>
+            <span className="handle">Auto-refreshing conversation</span>
+          </div>
+        </div>
+      </div>
 
       <div className="chatBox">
-        {messages.map((m) => (
+        {messages.map((message) => (
           <div
-            key={m.id}
-            className={`message-bubble ${m.sender_id == parseInt(userId as string) ? 'received' : 'sent'}`}
+            key={message.id}
+            className={`message-bubble ${message.sender_id === Number(userId) ? 'received' : 'sent'}`}
           >
-            {m.content && <div>{m.content}</div>}
-            {m.image_url && (
-              m.media_type === 'video' ? (
+            {message.content && <div>{message.content}</div>}
+            {message.image_url && (
+              message.media_type === 'video' ? (
                 <video
-                  src={m.image_url}
+                  src={message.image_url}
                   controls
                   style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', marginTop: '8px' }}
                 />
               ) : (
                 <Image
-                  src={m.image_url}
+                  src={message.image_url}
                   alt="Shared media"
                   width={200}
                   height={200}
@@ -137,6 +198,7 @@ export default function Chat() {
             )}
           </div>
         ))}
+        <div ref={endRef} />
       </div>
 
       {mediaPreview && (
@@ -173,12 +235,18 @@ export default function Chat() {
         <input
           value={msgInput}
           onChange={(e) => setMsgInput(e.target.value)}
-          placeholder="Type message..."
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          placeholder="Type a message..."
+          onKeyDown={(e) => e.key === 'Enter' && void sendMessage()}
         />
-        <button onClick={sendMessage} disabled={uploading || (!msgInput.trim() && !mediaPreview)}>
+        <button onClick={() => void sendMessage()} disabled={uploading || (!msgInput.trim() && !mediaPreview)}>
           <FiSend size={16} />
         </button>
+      </div>
+
+      <div className="mobile-bottom-nav">
+        <button onClick={() => router.push('/')} className="navButton">Feed</button>
+        <button onClick={() => router.push('/search')} className="navButton">Search</button>
+        <button onClick={() => router.push('/settings')} className="navButton">Settings</button>
       </div>
     </div>
   );

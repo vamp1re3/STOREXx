@@ -1,9 +1,21 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FiRss, FiLogIn, FiUserPlus, FiHeart, FiMessageCircle, FiSettings, FiUpload, FiSearch } from 'react-icons/fi';
+import {
+  FiBookmark,
+  FiHeart,
+  FiLogIn,
+  FiMessageCircle,
+  FiMessageSquare,
+  FiRss,
+  FiSearch,
+  FiSettings,
+  FiTrash2,
+  FiUpload,
+  FiUserPlus,
+} from 'react-icons/fi';
 
 interface Post {
   id: number;
@@ -14,13 +26,31 @@ interface Post {
   image_url: string;
   caption: string;
   like_count: number;
+  comment_count: number;
   is_liked: boolean;
+  is_bookmarked: boolean;
   media_type: 'image' | 'video';
+}
+
+interface Comment {
+  id: number;
+  user_id: number;
+  username: string;
+  display_name: string;
+  profile_pic: string;
+  content: string;
+  created_at: string;
 }
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [unreadCounts, setUnreadCounts] = useState<Record<number, number>>({});
+  const [commentsByPostId, setCommentsByPostId] = useState<Record<number, Comment[]>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
+  const [activeCommentsPostId, setActiveCommentsPostId] = useState<number | null>(null);
   const [mediaUrl, setMediaUrl] = useState('');
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [caption, setCaption] = useState('');
@@ -28,26 +58,132 @@ export default function Home() {
   const [posting, setPosting] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    setToken(storedToken);
-    loadPosts(storedToken ?? undefined);
+  const getHeaders = useCallback((authToken?: string, includeJson = false): HeadersInit => {
+    const headers: HeadersInit = {};
+    if (includeJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+    return headers;
   }, []);
 
-  const loadPosts = async (authToken?: string) => {
-    setLoading(true);
+  const loadViewer = useCallback(async (authToken?: string) => {
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: getHeaders(authToken),
+      });
+
+      if (!res.ok) {
+        setCurrentUserId(null);
+        setIsAuthenticated(false);
+        return;
+      }
+
+      const user = await res.json();
+      setCurrentUserId(user.id);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Failed to load viewer:', error);
+    }
+  }, [getHeaders]);
+
+  const loadPosts = useCallback(async (authToken?: string, showLoader = true) => {
+    if (showLoader) {
+      setLoading(true);
+    }
+
     try {
       const res = await fetch('/api/posts', {
-        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        headers: getHeaders(authToken),
       });
       const data = await res.json();
       setPosts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load posts:', error);
     } finally {
-      setLoading(false);
+      if (showLoader) {
+        setLoading(false);
+      }
     }
-  };
+  }, [getHeaders]);
+
+  const loadUnreadCounts = useCallback(async (authToken?: string) => {
+    try {
+      const res = await fetch('/api/messages/unread', {
+        headers: getHeaders(authToken),
+      });
+
+      if (!res.ok) {
+        return;
+      }
+
+      const data = await res.json();
+      setUnreadCounts(data.counts || {});
+    } catch (error) {
+      console.error('Failed to load unread counts:', error);
+    }
+  }, [getHeaders]);
+
+  const loadComments = useCallback(async (postId: number) => {
+    try {
+      const res = await fetch(`/api/comments/${postId}`);
+      const data = await res.json();
+      setCommentsByPostId((prev) => ({ ...prev, [postId]: Array.isArray(data) ? data : [] }));
+    } catch (error) {
+      console.error('Failed to load comments:', error);
+    }
+  }, []);
+
+  const initializeSession = useCallback(async () => {
+    const storedToken = localStorage.getItem('token');
+
+    if (storedToken) {
+      setToken(storedToken);
+      setIsAuthenticated(true);
+      await Promise.all([
+        loadViewer(storedToken),
+        loadPosts(storedToken),
+        loadUnreadCounts(storedToken),
+      ]);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const user = await res.json();
+        setIsAuthenticated(true);
+        setCurrentUserId(user.id);
+        await Promise.all([loadPosts(), loadUnreadCounts()]);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to restore session:', error);
+    }
+
+    setIsAuthenticated(false);
+    setCurrentUserId(null);
+    await loadPosts();
+  }, [loadPosts, loadUnreadCounts, loadViewer]);
+
+  useEffect(() => {
+    void initializeSession();
+  }, [initializeSession]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      void loadPosts(token ?? undefined, false);
+      void loadUnreadCounts(token ?? undefined);
+    }, 6000);
+
+    return () => window.clearInterval(interval);
+  }, [isAuthenticated, token, loadPosts, loadUnreadCounts]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -61,6 +197,7 @@ export default function Home() {
 
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: getHeaders(token ?? undefined),
         body: formData,
       });
 
@@ -79,22 +216,19 @@ export default function Home() {
   };
 
   const post = async () => {
-    if (!token || !mediaUrl.trim()) return;
+    if (!isAuthenticated || !mediaUrl.trim()) return;
 
     setPosting(true);
     try {
       await fetch('/api/posts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ image_url: mediaUrl, media_type: mediaType, caption: caption }),
+        headers: getHeaders(token ?? undefined, true),
+        body: JSON.stringify({ image_url: mediaUrl, media_type: mediaType, caption }),
       });
       setMediaUrl('');
       setCaption('');
       setMediaType('image');
-      loadPosts(token);
+      await loadPosts(token ?? undefined);
     } catch (error) {
       console.error('Failed to post:', error);
     } finally {
@@ -102,20 +236,85 @@ export default function Home() {
     }
   };
 
+  const toggleLike = async (postId: number) => {
+    if (!isAuthenticated) return;
+    await fetch(`/api/like/${postId}`, {
+      method: 'POST',
+      headers: getHeaders(token ?? undefined),
+    });
+    await loadPosts(token ?? undefined);
+  };
+
+  const toggleBookmark = async (postId: number) => {
+    if (!isAuthenticated) return;
+    await fetch(`/api/bookmarks/${postId}`, {
+      method: 'POST',
+      headers: getHeaders(token ?? undefined),
+    });
+    await loadPosts(token ?? undefined);
+  };
+
+  const toggleComments = async (postId: number) => {
+    const nextValue = activeCommentsPostId === postId ? null : postId;
+    setActiveCommentsPostId(nextValue);
+    if (nextValue) {
+      await loadComments(postId);
+    }
+  };
+
+  const addComment = async (postId: number) => {
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+
+    const res = await fetch(`/api/comments/${postId}`, {
+      method: 'POST',
+      headers: getHeaders(token ?? undefined, true),
+      body: JSON.stringify({ content }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || 'Comment failed');
+      return;
+    }
+
+    setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
+    await Promise.all([loadComments(postId), loadPosts(token ?? undefined)]);
+  };
+
+  const deletePost = async (postId: number) => {
+    if (!confirm('Delete this post?')) {
+      return;
+    }
+
+    const res = await fetch(`/api/posts/${postId}`, {
+      method: 'DELETE',
+      headers: getHeaders(token ?? undefined),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Could not delete post');
+      return;
+    }
+
+    await loadPosts(token ?? undefined);
+  };
+
   return (
-    <div className="container">
+    <div className="container page-with-mobile-nav">
       <div className="hero-card">
         <div>
           <p className="eyebrow">Luxury dark social</p>
           <h1 className="brand-title">HELKET</h1>
           <p className="brand-subtitle">
-            Share photos, short clips, and private moments in a more polished Instagram-like feed.
+            Share photos, short clips, and private moments in a polished mobile-first feed.
           </p>
         </div>
-        {token && <div className="status-pill">Signed in</div>}
+        {isAuthenticated && <div className="status-pill">Session active</div>}
       </div>
 
-      {token && (
+      {isAuthenticated && (
         <div className="navBar">
           <Link href="/" className="navButton">
             <FiRss size={16} /> Feed
@@ -129,11 +328,11 @@ export default function Home() {
         </div>
       )}
 
-      {!token && (
+      {!isAuthenticated && (
         <div className="card auth-card" id="auth">
           <p className="eyebrow">Welcome</p>
           <h2>Login to unlock your feed</h2>
-          <p className="muted-text">Search users, upload posts, share videos, and send private messages once you sign in.</p>
+          <p className="muted-text">Search users, upload posts, save favorites, and send private messages once you sign in.</p>
           <div className="button-group auth-actions">
             <Link href="/login" className="navButton">
               <FiLogIn size={16} /> Login
@@ -145,59 +344,57 @@ export default function Home() {
         </div>
       )}
 
-      {token && (
-        <>
-          <div className="card composer-card" id="postBox">
-            <div className="composer-header">
-              <div>
-                <p className="eyebrow">Create</p>
-                <h3>New post</h3>
-              </div>
-              <span className="composer-hint">{mediaUrl ? 'Media ready' : 'Photo or video'}</span>
+      {isAuthenticated && (
+        <div className="card composer-card" id="postBox">
+          <div className="composer-header">
+            <div>
+              <p className="eyebrow">Create</p>
+              <h3>New post</h3>
             </div>
-            <div className="file-upload">
-              <label htmlFor="post-media-upload" className="upload-btn">
-                <FiUpload size={16} /> {uploading ? 'Uploading...' : mediaUrl ? 'Change Media' : 'Upload Media'}
-              </label>
-              <input
-                id="post-media-upload"
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleFileUpload}
-                style={{ display: 'none' }}
-              />
-              {mediaUrl && (
-                <div className="preview">
-                  {mediaType === 'image' ? (
-                    <Image
-                      src={mediaUrl}
-                      alt="Post preview"
-                      width={100}
-                      height={100}
-                      unoptimized
-                      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <video src={mediaUrl} style={{ width: '120px', height: '90px', borderRadius: '8px' }} controls />
-                  )}
-                </div>
-              )}
-            </div>
-            <input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder="Caption (optional)"
-            />
-            <div className="button-group">
-              <button onClick={post} disabled={posting || !mediaUrl.trim()}>
-                {posting ? 'Posting...' : 'Post'}
-              </button>
-            </div>
+            <span className="composer-hint">{mediaUrl ? 'Media ready' : 'Photo or video'}</span>
           </div>
-        </>
+          <div className="file-upload">
+            <label htmlFor="post-media-upload" className="upload-btn">
+              <FiUpload size={16} /> {uploading ? 'Uploading...' : mediaUrl ? 'Change Media' : 'Upload Media'}
+            </label>
+            <input
+              id="post-media-upload"
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+            {mediaUrl && (
+              <div className="preview">
+                {mediaType === 'image' ? (
+                  <Image
+                    src={mediaUrl}
+                    alt="Post preview"
+                    width={100}
+                    height={100}
+                    unoptimized
+                    style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                ) : (
+                  <video src={mediaUrl} style={{ width: '120px', height: '90px', borderRadius: '8px' }} controls />
+                )}
+              </div>
+            )}
+          </div>
+          <input
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Caption (optional)"
+          />
+          <div className="button-group">
+            <button onClick={post} disabled={posting || !mediaUrl.trim()}>
+              {posting ? 'Posting...' : 'Post'}
+            </button>
+          </div>
+        </div>
       )}
 
-      {token ? (
+      {isAuthenticated ? (
         <div id="feed">
           {loading && (
             <div className="skeleton-container">
@@ -213,16 +410,16 @@ export default function Home() {
           )}
 
           {!loading && posts.length === 0 && (
-            <div className="empty-state">
-              <p>No posts yet. Be the first to share something!</p>
+            <div className="empty-state card">
+              <p>No posts yet. Be the first to share something.</p>
             </div>
           )}
 
-          {!loading && posts.map((p) => (
-            <div key={p.id} className="post">
+          {!loading && posts.map((postItem) => (
+            <div key={postItem.id} className="post media-post-card">
               <div className="user">
                 <Image
-                  src={p.profile_pic || '/default-avatar.svg'}
+                  src={postItem.profile_pic || '/default-avatar.svg'}
                   alt="Profile"
                   width={40}
                   height={40}
@@ -230,18 +427,19 @@ export default function Home() {
                 />
                 <div className="user-meta">
                   <b>
-                    <Link href={`/profile/${p.user_id}`}>
-                      {p.display_name || p.username}
+                    <Link href={`/profile/${postItem.user_id}`}>
+                      {postItem.display_name || postItem.username}
                     </Link>
                   </b>
-                  <span className="handle">@{p.username}</span>
+                  <span className="handle">@{postItem.username}</span>
                 </div>
               </div>
-              {p.media_type === 'video' ? (
-                <video src={p.image_url} controls style={{ width: '100%', borderRadius: '12px' }} />
+
+              {postItem.media_type === 'video' ? (
+                <video src={postItem.image_url} controls style={{ width: '100%', borderRadius: '12px' }} />
               ) : (
                 <Image
-                  src={p.image_url}
+                  src={postItem.image_url}
                   alt="Post"
                   width={800}
                   height={800}
@@ -249,37 +447,78 @@ export default function Home() {
                   style={{ width: '100%', height: 'auto' }}
                 />
               )}
-              <div className="caption">{p.caption}</div>
+
+              <div className="caption">{postItem.caption || 'Shared a new moment.'}</div>
+
               <div className="actions">
                 <button
-                  className={`likeBtn ${p.is_liked ? 'liked' : ''}`}
-                  disabled={!token}
-                  onClick={() => toggleLike(p.id)}
+                  className={`likeBtn ${postItem.is_liked ? 'liked' : ''}`}
+                  onClick={() => void toggleLike(postItem.id)}
                 >
-                  <FiHeart size={16} /> {p.like_count || 0}
+                  <FiHeart size={16} /> {postItem.like_count || 0}
                 </button>
-                <Link href={`/chat/${p.user_id}`} className="chatBtn">
-                  <FiMessageCircle size={16} /> Chat
+
+                <button className="profileBtn" onClick={() => void toggleComments(postItem.id)}>
+                  <FiMessageSquare size={16} /> {postItem.comment_count || 0}
+                </button>
+
+                <button className={`profileBtn ${postItem.is_bookmarked ? 'liked' : ''}`} onClick={() => void toggleBookmark(postItem.id)}>
+                  <FiBookmark size={16} /> Save
+                </button>
+
+                <Link href={`/chat/${postItem.user_id}`} className="chatBtn">
+                  <FiMessageCircle size={16} />
+                  Chat
+                  {unreadCounts[postItem.user_id] ? <span className="badge-dot">{unreadCounts[postItem.user_id]}</span> : null}
                 </Link>
+
+                {currentUserId === postItem.user_id && (
+                  <button className="logoutBtn" onClick={() => void deletePost(postItem.id)}>
+                    <FiTrash2 size={16} /> Delete
+                  </button>
+                )}
               </div>
+
+              {activeCommentsPostId === postItem.id && (
+                <div className="comments-panel">
+                  <div className="comments-list">
+                    {(commentsByPostId[postItem.id] || []).map((comment) => (
+                      <div key={comment.id} className="comment-item">
+                        <strong>{comment.display_name || comment.username}</strong>
+                        <span>{comment.content}</span>
+                      </div>
+                    ))}
+                    {(commentsByPostId[postItem.id] || []).length === 0 && (
+                      <p className="muted-text">No comments yet. Start the conversation.</p>
+                    )}
+                  </div>
+                  <div className="comment-input-row">
+                    <input
+                      value={commentInputs[postItem.id] || ''}
+                      onChange={(e) => setCommentInputs((prev) => ({ ...prev, [postItem.id]: e.target.value }))}
+                      placeholder="Write a comment..."
+                    />
+                    <button onClick={() => void addComment(postItem.id)}>Send</button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
       ) : (
-        <div className="empty-state">
+        <div className="empty-state card">
           <p>Please login or sign up to view the feed.</p>
+        </div>
+      )}
+
+      {isAuthenticated && (
+        <div className="mobile-bottom-nav">
+          <Link href="/" className="navButton">Feed</Link>
+          <Link href="/search" className="navButton">Search</Link>
+          <Link href="/settings" className="navButton">Settings</Link>
         </div>
       )}
     </div>
   );
-
-  async function toggleLike(postId: number) {
-    if (!token) return;
-    await fetch(`/api/like/${postId}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    loadPosts(token);
-  }
 }
 

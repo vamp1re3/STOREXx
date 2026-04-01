@@ -2,6 +2,8 @@
 -- WARNING: This will DELETE ALL DATA! Use only for fresh setup or when you want to start over
 
 -- Drop tables in correct order (reverse of creation)
+DROP TABLE IF EXISTS bookmarks CASCADE;
+DROP TABLE IF EXISTS comments CASCADE;
 DROP TABLE IF EXISTS blocks CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS likes CASCADE;
@@ -17,6 +19,8 @@ CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
   display_name VARCHAR(100),
+  bio TEXT DEFAULT '',
+  is_private BOOLEAN DEFAULT FALSE,
   email VARCHAR(100) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   profile_pic VARCHAR(255),
@@ -74,6 +78,7 @@ CREATE TABLE messages (
   content TEXT,
   image_url VARCHAR(255),
   media_type VARCHAR(20) DEFAULT 'image',
+  read_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -86,16 +91,42 @@ CREATE TABLE blocks (
   UNIQUE(blocker_id, blocked_id)
 );
 
+-- Comments table
+CREATE TABLE comments (
+  id SERIAL PRIMARY KEY,
+  post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bookmarks table
+CREATE TABLE bookmarks (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, post_id)
+);
+
 -- Indexes for messages table
 CREATE INDEX idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX idx_messages_receiver_id ON messages(receiver_id);
 CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
+CREATE INDEX idx_messages_read_at ON messages(receiver_id, read_at);
 -- Composite index for conversation queries
 CREATE INDEX idx_messages_conversation ON messages(LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id), created_at DESC);
 
 -- Indexes for blocks table
 CREATE INDEX idx_blocks_blocker_id ON blocks(blocker_id);
 CREATE INDEX idx_blocks_blocked_id ON blocks(blocked_id);
+
+-- Indexes for comments and bookmarks
+CREATE INDEX idx_comments_post_id ON comments(post_id);
+CREATE INDEX idx_comments_user_id ON comments(user_id);
+CREATE INDEX idx_comments_created_at ON comments(created_at DESC);
+CREATE INDEX idx_bookmarks_user_id ON bookmarks(user_id);
+CREATE INDEX idx_bookmarks_post_id ON bookmarks(post_id);
 
 -- Confirm recreation completed
 SELECT 'Database recreated successfully! All data has been deleted.' as status;
