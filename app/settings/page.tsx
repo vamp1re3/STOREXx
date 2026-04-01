@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiEye, FiEyeOff, FiHome, FiLock, FiLogOut, FiMessageCircle, FiSave, FiSearch, FiSettings, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiEye, FiEyeOff, FiHome, FiLock, FiLogOut, FiMessageCircle, FiSave, FiSearch, FiSettings, FiShield, FiTrash2, FiUpload, FiUser } from 'react-icons/fi';
 
 interface User {
   id: number;
@@ -291,8 +291,13 @@ export default function Settings() {
               <div className="form-group">
                 <label>Profile Picture</label>
                 <div className="file-upload">
-                  <label htmlFor="profile-pic-upload" className="upload-btn">
-                    {uploading ? 'Uploading...' : profilePic ? 'Change Picture' : 'Upload Picture'}
+                  <label
+                    htmlFor="profile-pic-upload"
+                    className="upload-btn icon-only"
+                    aria-label={uploading ? 'Uploading picture' : profilePic ? 'Change picture' : 'Upload picture'}
+                    title={uploading ? 'Uploading picture' : profilePic ? 'Change picture' : 'Upload picture'}
+                  >
+                    <FiUpload size={16} />
                   </label>
                   <input id="profile-pic-upload" type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                   {profilePic && (

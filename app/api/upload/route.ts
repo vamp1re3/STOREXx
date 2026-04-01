@@ -38,16 +38,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Only image or video files are allowed' }, { status: 400 });
     }
 
-    const maxSize = file.type.startsWith('video/') ? 25 * 1024 * 1024 : 10 * 1024 * 1024;
+    const maxImageSize = 20 * 1024 * 1024;
+    const maxVideoSize = 80 * 1024 * 1024;
+    const maxSize = file.type.startsWith('video/') ? maxVideoSize : maxImageSize;
     if (file.size > maxSize) {
-      const limitLabel = file.type.startsWith('video/') ? '25MB' : '10MB';
+      const limitLabel = file.type.startsWith('video/') ? '80MB' : '20MB';
       return NextResponse.json({ error: `File is too large. Please keep it under ${limitLabel}.` }, { status: 400 });
     }
 
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', type);
     await fs.mkdir(uploadDir, { recursive: true });
 
-    const ext = path.extname(file.name) || (file.type.startsWith('video/') ? '.mp4' : '.jpg');
+    const ext = path.extname(file.name).toLowerCase() || (file.type.startsWith('video/') ? '.mp4' : '.jpg');
     const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
     const filePath = path.join(uploadDir, filename);
 

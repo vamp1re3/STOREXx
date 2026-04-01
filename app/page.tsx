@@ -4,7 +4,10 @@ import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
+  FiActivity,
   FiBookmark,
+  FiChevronDown,
+  FiChevronUp,
   FiHeart,
   FiHome,
   FiLogIn,
@@ -57,6 +60,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [introHidden, setIntroHidden] = useState(false);
 
   const getHeaders = useCallback((authToken?: string, includeJson = false): HeadersInit => {
     const headers: HeadersInit = {};
@@ -169,6 +173,8 @@ export default function Home() {
   }, [loadPosts, loadUnreadCounts, loadViewer]);
 
   useEffect(() => {
+    const savedPreference = localStorage.getItem('helket-intro-hidden');
+    setIntroHidden(savedPreference === '1');
     void initializeSession();
   }, [initializeSession]);
 
@@ -301,27 +307,50 @@ export default function Home() {
     await loadPosts(token ?? undefined);
   };
 
+  const toggleIntro = () => {
+    setIntroHidden((current) => {
+      const nextValue = !current;
+      localStorage.setItem('helket-intro-hidden', nextValue ? '1' : '0');
+      return nextValue;
+    });
+  };
+
   return (
     <div className="container page-with-mobile-nav">
-      <div className="hero-card">
-        <div>
+      <div className={`hero-card ${introHidden ? 'hero-card-collapsed' : ''}`}>
+        <div className="hero-copy">
           <p className="eyebrow">Luxury dark social</p>
           <h1 className="brand-title">HELKET</h1>
-          <p className="brand-subtitle">
-            Share photos, short clips, and private moments in a polished mobile-first feed.
-          </p>
+          {!introHidden && (
+            <p className="brand-subtitle">
+              Share photos, short clips, and private moments in a polished mobile-first feed.
+            </p>
+          )}
         </div>
-        {isAuthenticated && (
-          <div className="header-actions">
+        <div className="header-actions">
+          <button
+            type="button"
+            className="icon-chip"
+            onClick={toggleIntro}
+            aria-label={introHidden ? 'Show intro' : 'Hide intro'}
+            title={introHidden ? 'Show intro' : 'Hide intro'}
+          >
+            {introHidden ? <FiChevronDown size={16} /> : <FiChevronUp size={16} />}
+          </button>
+          {isAuthenticated && (
+            <span className="icon-chip status-icon" aria-label="Session active" title="Session active">
+              <FiActivity size={16} />
+            </span>
+          )}
+          {isAuthenticated && (
             <Link href="/chat" className="top-chat-button" aria-label="Open chats" title="Chats">
               <FiMessageCircle size={18} />
               {Object.values(unreadCounts).reduce((total, count) => total + count, 0) > 0 ? (
                 <span className="badge-dot top-chat-badge">{Object.values(unreadCounts).reduce((total, count) => total + count, 0)}</span>
               ) : null}
             </Link>
-            <div className="status-pill">Session active</div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {!isAuthenticated && (
@@ -350,8 +379,13 @@ export default function Home() {
             <span className="composer-hint">{mediaUrl ? 'Media ready' : 'Photo or video'}</span>
           </div>
           <div className="file-upload">
-            <label htmlFor="post-media-upload" className="upload-btn">
-              <FiUpload size={16} /> {uploading ? 'Uploading...' : mediaUrl ? 'Change Media' : 'Upload Media'}
+            <label
+              htmlFor="post-media-upload"
+              className="upload-btn icon-only"
+              aria-label={uploading ? 'Uploading media' : mediaUrl ? 'Change media' : 'Upload media'}
+              title={uploading ? 'Uploading media' : mediaUrl ? 'Change media' : 'Upload media'}
+            >
+              <FiUpload size={16} />
             </label>
             <input
               id="post-media-upload"
