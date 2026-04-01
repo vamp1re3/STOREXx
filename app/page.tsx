@@ -9,9 +9,6 @@ import {
   FiLogIn,
   FiMessageCircle,
   FiMessageSquare,
-  FiRss,
-  FiSearch,
-  FiSettings,
   FiTrash2,
   FiUpload,
   FiUserPlus,
@@ -323,20 +320,6 @@ export default function Home() {
           </div>
         )}
       </div>
-
-      {isAuthenticated && (
-        <div className="navBar">
-          <Link href="/" className="navButton">
-            <FiRss size={16} /> Feed
-          </Link>
-          <Link href="/search" className="navButton">
-            <FiSearch size={16} /> Search
-          </Link>
-          <Link href="/settings" className="navButton">
-            <FiSettings size={16} /> Settings
-          </Link>
-        </div>
-      )}
 
       {!isAuthenticated && (
         <div className="card auth-card" id="auth">
