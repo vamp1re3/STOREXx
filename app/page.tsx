@@ -258,10 +258,8 @@ export default function Home() {
                 >
                   <FiHeart size={16} /> {p.like_count || 0}
                 </button>
-                <Link href={`/chat/${p.user_id}`}>
-                  <button disabled={!token} className="chatBtn">
-                    <FiMessageCircle size={16} /> Chat
-                  </button>
+                <Link href={`/chat/${p.user_id}`} className="chatBtn">
+                  <FiMessageCircle size={16} /> Chat
                 </Link>
               </div>
             </div>

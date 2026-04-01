@@ -248,6 +248,13 @@ button:disabled {
   background: linear-gradient(135deg, rgba(18, 28, 55, 0.96), rgba(53, 17, 44, 0.95));
 }
 
+.chatBtn,
+.chat-btn {
+  min-width: 110px;
+  background: linear-gradient(135deg, #7c3aed, #4c1d95 58%, #6f1d45);
+  color: #fff;
+}
+
 .likeBtn.liked {
   background: linear-gradient(135deg, #c026d3, #7c3aed 58%, #5b1840);
 }

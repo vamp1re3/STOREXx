@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiSearch, FiUser, FiFilm, FiArrowLeft } from 'react-icons/fi';
+import { FiSearch, FiUser, FiFilm, FiArrowLeft, FiMessageCircle } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 
 interface UserResult { id: number; username: string; display_name: string; profile_pic: string; }
@@ -94,7 +94,12 @@ export default function Search() {
                       <span className="handle">@{u.username}</span>
                     </div>
                   </div>
-                  <Link href={`/profile/${u.id}`} className="navButton">View profile</Link>
+                  <div className="button-group">
+                    <Link href={`/profile/${u.id}`} className="navButton">View profile</Link>
+                    <Link href={`/chat/${u.id}`} className="chatBtn">
+                      <FiMessageCircle size={16} /> Chat
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
