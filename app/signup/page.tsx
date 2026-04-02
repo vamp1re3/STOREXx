@@ -17,6 +17,12 @@ export default function Signup() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [googleData, setGoogleData] = useState<{
+    google_id: string;
+    email: string;
+    name: string;
+    picture: string;
+  } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -35,6 +41,27 @@ export default function Signup() {
 
     void restoreSession();
   }, [router]);
+
+  useEffect(() => {
+    // Check for Google OAuth data in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const googleId = urlParams.get('google_id');
+    const googleEmail = urlParams.get('email');
+    const googleName = urlParams.get('name');
+    const googlePicture = urlParams.get('picture');
+
+    if (googleId && googleEmail && googleName) {
+      setGoogleData({
+        google_id: googleId,
+        email: googleEmail,
+        name: googleName,
+        picture: googlePicture || '',
+      });
+      setEmail(googleEmail);
+      setDisplayName(googleName);
+      setProfilePic(googlePicture || '');
+    }
+  }, []);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -65,7 +92,7 @@ export default function Signup() {
   };
 
   const signup = async () => {
-    if (password !== confirmPassword) {
+    if (!googleData && password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
@@ -73,16 +100,23 @@ export default function Signup() {
     setLoading(true);
     setError('');
 
+    const signupData: any = {
+      username,
+      display_name: displayName,
+      email,
+      profile_pic: profilePic,
+    };
+
+    if (googleData) {
+      signupData.google_id = googleData.google_id;
+    } else {
+      signupData.password = password;
+    }
+
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username,
-        display_name: displayName,
-        email,
-        password,
-        profile_pic: profilePic,
-      }),
+      body: JSON.stringify(signupData),
     });
 
     const data = await res.json();
@@ -101,45 +135,61 @@ export default function Signup() {
       <div className="card auth-card">
         <p className="eyebrow">Create account</p>
         <h1 className="brand-title">Join HELKET</h1>
-        <p className="brand-subtitle">Set up your profile and start posting photos, videos, and private messages.</p>
+        <p className="brand-subtitle">
+          {googleData
+            ? 'Complete your profile to finish signing up with Google.'
+            : 'Set up your profile and start posting photos, videos, and private messages.'
+          }
+        </p>
+
+        {googleData && (
+          <div className="google-notice">
+            <p>Signing up with Google account: <strong>{googleData.email}</strong></p>
+          </div>
+        )}
 
         <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
         <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display Name (optional)" />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" />
-        <div className="password-field">
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            type={showPassword ? 'text' : 'password'}
-          />
-          <button
-            type="button"
-            className="password-toggle"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            title={showPassword ? 'Hide password' : 'Show password'}
-            onClick={() => setShowPassword((value) => !value)}
-          >
-            {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
-          </button>
-        </div>
-        <div className="password-field">
-          <input
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm Password"
-            type={showConfirmPassword ? 'text' : 'password'}
-          />
-          <button
-            type="button"
-            className="password-toggle"
-            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-            title={showConfirmPassword ? 'Hide password' : 'Show password'}
-            onClick={() => setShowConfirmPassword((value) => !value)}
-          >
-            {showConfirmPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
-          </button>
-        </div>
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" disabled={!!googleData} />
+
+        {!googleData && (
+          <>
+            <div className="password-field">
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                type={showPassword ? 'text' : 'password'}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                onClick={() => setShowPassword((value) => !value)}
+              >
+                {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+              </button>
+            </div>
+            <div className="password-field">
+              <input
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm Password"
+                type={showConfirmPassword ? 'text' : 'password'}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                onClick={() => setShowConfirmPassword((value) => !value)}
+              >
+                {showConfirmPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+              </button>
+            </div>
+          </>
+        )}
 
         <div className="file-upload">
           <label htmlFor="profile-pic-upload" className="upload-btn">

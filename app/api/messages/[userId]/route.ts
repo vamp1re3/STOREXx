@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
 
     const [result, chatUser] = await Promise.all([
       pool.query(
-        'SELECT * FROM messages WHERE (sender_id=$1 AND receiver_id=$2) OR (sender_id=$2 AND receiver_id=$1) ORDER BY created_at',
+        'SELECT * FROM messages WHERE ((sender_id=$1 AND receiver_id=$2) OR (sender_id=$2 AND receiver_id=$1)) AND deleted_at IS NULL ORDER BY created_at',
         [authUser.id, otherUserId]
       ),
       pool.query(
@@ -78,6 +78,78 @@ export async function POST(req: NextRequest, context: { params: Promise<{ userId
     return NextResponse.json({ message: 'Message sent' });
   } catch (error) {
     console.error('Message send error:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest, context: { params: Promise<{ userId: string }> }) {
+  try {
+    const authUser = authenticate(req);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { userId } = await context.params;
+    const otherUserId = Number(userId);
+    const { messageId, content } = await req.json();
+
+    if (!messageId || !content) {
+      return NextResponse.json({ error: 'Message ID and content required' }, { status: 400 });
+    }
+
+    const message = await pool.query(
+      'SELECT * FROM messages WHERE id = $1 AND sender_id = $2',
+      [messageId, authUser.id]
+    );
+
+    if (message.rows.length === 0) {
+      return NextResponse.json({ error: 'Message not found or not yours' }, { status: 404 });
+    }
+
+    await pool.query(
+      'UPDATE messages SET content = $1, edited_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [content, messageId]
+    );
+
+    return NextResponse.json({ message: 'Message edited' });
+  } catch (error) {
+    console.error('Message edit error:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, context: { params: Promise<{ userId: string }> }) {
+  try {
+    const authUser = authenticate(req);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { userId } = await context.params;
+    const otherUserId = Number(userId);
+    const { messageId } = await req.json();
+
+    if (!messageId) {
+      return NextResponse.json({ error: 'Message ID required' }, { status: 400 });
+    }
+
+    const message = await pool.query(
+      'SELECT * FROM messages WHERE id = $1 AND sender_id = $2',
+      [messageId, authUser.id]
+    );
+
+    if (message.rows.length === 0) {
+      return NextResponse.json({ error: 'Message not found or not yours' }, { status: 404 });
+    }
+
+    await pool.query(
+      'UPDATE messages SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [messageId]
+    );
+
+    return NextResponse.json({ message: 'Message deleted' });
+  } catch (error) {
+    console.error('Message delete error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

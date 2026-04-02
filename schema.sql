@@ -10,6 +10,8 @@ CREATE TABLE users (
   email VARCHAR(100) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   profile_pic VARCHAR(255),
+  email_verified BOOLEAN DEFAULT FALSE,
+  account_status VARCHAR(20) DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -25,12 +27,30 @@ CREATE TABLE posts (
   image_url VARCHAR(255) NOT NULL,
   media_type VARCHAR(20) DEFAULT 'image' NOT NULL,
   caption TEXT,
+  archived BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes for posts table
 CREATE INDEX idx_posts_user_id ON posts(user_id);
 CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+
+-- Stories table
+CREATE TABLE stories (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  image_url VARCHAR(255) NOT NULL,
+  media_type VARCHAR(20) DEFAULT 'image' NOT NULL,
+  caption TEXT,
+  archived BOOLEAN DEFAULT FALSE,
+  expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL '24 hours'),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for stories table
+CREATE INDEX idx_stories_user_id ON stories(user_id);
+CREATE INDEX idx_stories_expires_at ON stories(expires_at);
+CREATE INDEX idx_stories_created_at ON stories(created_at DESC);
 
 -- Likes table
 CREATE TABLE likes (
@@ -56,6 +76,18 @@ CREATE TABLE follows (
 CREATE INDEX idx_follows_follower_id ON follows(follower_id);
 CREATE INDEX idx_follows_following_id ON follows(following_id);
 
+-- Close friends table
+CREATE TABLE close_friends (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  friend_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE(user_id, friend_id)
+);
+
+-- Indexes for close friends
+CREATE INDEX idx_close_friends_user_id ON close_friends(user_id);
+CREATE INDEX idx_close_friends_friend_id ON close_friends(friend_id);
+
 -- Messages table with image support
 CREATE TABLE messages (
   id SERIAL PRIMARY KEY,
@@ -65,8 +97,43 @@ CREATE TABLE messages (
   image_url VARCHAR(255),
   media_type VARCHAR(20) DEFAULT 'image',
   read_at TIMESTAMP,
+  edited_at TIMESTAMP,
+  deleted_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Conversations table for chat settings
+CREATE TABLE conversations (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  other_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  muted BOOLEAN DEFAULT FALSE,
+  theme VARCHAR(50) DEFAULT 'default',
+  background VARCHAR(255),
+  archived BOOLEAN DEFAULT FALSE,
+  UNIQUE(user_id, other_user_id)
+);
+
+-- Indexes for conversations
+CREATE INDEX idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX idx_conversations_other_user_id ON conversations(other_user_id);
+
+-- Calls table
+CREATE TABLE calls (
+  id SERIAL PRIMARY KEY,
+  caller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  call_type VARCHAR(20) DEFAULT 'audio', -- 'audio' or 'video'
+  status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'ongoing', 'ended'
+  started_at TIMESTAMP,
+  ended_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for calls
+CREATE INDEX idx_calls_caller_id ON calls(caller_id);
+CREATE INDEX idx_calls_receiver_id ON calls(receiver_id);
+CREATE INDEX idx_calls_status ON calls(status);
 
 CREATE TABLE blocks (
   id SERIAL PRIMARY KEY,
@@ -74,6 +141,34 @@ CREATE TABLE blocks (
   blocked_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(blocker_id, blocked_id)
+);
+
+-- Restrictions table (for restricted users)
+CREATE TABLE restrictions (
+  id SERIAL PRIMARY KEY,
+  restrictor_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  restricted_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(restrictor_id, restricted_id)
+);
+
+-- Reports table
+CREATE TABLE reports (
+  id SERIAL PRIMARY KEY,
+  reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  reported_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  reported_message_id INTEGER REFERENCES messages(id) ON DELETE CASCADE,
+  reason TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Feedback table
+CREATE TABLE feedback (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(50), -- 'bug', 'feature', 'general'
+  content TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE comments (
@@ -103,6 +198,17 @@ CREATE INDEX idx_messages_conversation ON messages(LEAST(sender_id, receiver_id)
 -- Indexes for blocks table
 CREATE INDEX idx_blocks_blocker_id ON blocks(blocker_id);
 CREATE INDEX idx_blocks_blocked_id ON blocks(blocked_id);
+
+-- Indexes for restrictions
+CREATE INDEX idx_restrictions_restrictor_id ON restrictions(restrictor_id);
+CREATE INDEX idx_restrictions_restricted_id ON restrictions(restricted_id);
+
+-- Indexes for reports
+CREATE INDEX idx_reports_reporter_id ON reports(reporter_id);
+CREATE INDEX idx_reports_reported_user_id ON reports(reported_user_id);
+
+-- Indexes for feedback
+CREATE INDEX idx_feedback_user_id ON feedback(user_id);
 
 -- Indexes for comments and bookmarks
 CREATE INDEX idx_comments_post_id ON comments(post_id);

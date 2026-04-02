@@ -76,6 +76,18 @@ export default function Login() {
           </button>
         </div>
         {error && <p style={{ color: '#ffabab' }}>{error}</p>}
+
+        <button
+          className="googleBtn"
+          onClick={() => window.location.href = '/api/auth/google'}
+        >
+          Continue with Google
+        </button>
+
+        <div className="divider">
+          <span>or</span>
+        </div>
+
         <button className="loginBtn" onClick={() => void login()} disabled={loading}>
           <FiLogIn size={18} /> {loading ? 'Logging in...' : 'Login'}
         </button>

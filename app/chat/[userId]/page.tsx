@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FiArrowLeft, FiHome, FiSearch, FiSend, FiSettings, FiUpload } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiHome, FiMoreVertical, FiSearch, FiSend, FiSettings, FiTrash2, FiUpload } from 'react-icons/fi';
 
 interface Message {
   id: number;
@@ -12,6 +12,7 @@ interface Message {
   content: string | null;
   image_url: string | null;
   media_type: 'image' | 'video' | null;
+  edited_at: string | null;
   created_at: string;
 }
 
@@ -32,6 +33,8 @@ export default function Chat() {
   const [uploading, setUploading] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editInput, setEditInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
@@ -149,6 +152,42 @@ export default function Chat() {
     }
   };
 
+  const handleEditMessage = async (messageId: number) => {
+    if (!editInput.trim()) return;
+
+    try {
+      const res = await fetch(`/api/messages/${userId}`, {
+        method: 'PUT',
+        headers: getHeaders(true),
+        body: JSON.stringify({ messageId, content: editInput }),
+      });
+
+      if (res.ok) {
+        setEditingMessageId(null);
+        setEditInput('');
+        await loadMessages();
+      }
+    } catch (error) {
+      console.error('Error editing message:', error);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: number) => {
+    try {
+      const res = await fetch(`/api/messages/${userId}`, {
+        method: 'DELETE',
+        headers: getHeaders(true),
+        body: JSON.stringify({ messageId }),
+      });
+
+      if (res.ok) {
+        await loadMessages();
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  };
+
   return (
     <div className="container page-with-mobile-nav">
       <button onClick={() => router.push('/')} className="back-btn">
@@ -177,24 +216,50 @@ export default function Chat() {
             key={message.id}
             className={`message-bubble ${message.sender_id === Number(userId) ? 'received' : 'sent'}`}
           >
-            {message.content && <div>{message.content}</div>}
-            {message.image_url && (
-              message.media_type === 'video' ? (
-                <video
-                  src={message.image_url}
-                  controls
-                  style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', marginTop: '8px' }}
+            {editingMessageId === message.id ? (
+              <div>
+                <input
+                  type="text"
+                  value={editInput}
+                  onChange={(e) => setEditInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleEditMessage(message.id)}
+                  style={{ width: '100%', marginBottom: '8px' }}
                 />
-              ) : (
-                <Image
-                  src={message.image_url}
-                  alt="Shared media"
-                  width={200}
-                  height={200}
-                  unoptimized
-                  style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', marginTop: '8px', height: 'auto' }}
-                />
-              )
+                <button onClick={() => handleEditMessage(message.id)}>Save</button>
+                <button onClick={() => setEditingMessageId(null)}>Cancel</button>
+              </div>
+            ) : (
+              <>
+                {message.content && <div>{message.content}</div>}
+                {message.image_url && (
+                  message.media_type === 'video' ? (
+                    <video
+                      src={message.image_url}
+                      controls
+                      style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', marginTop: '8px' }}
+                    />
+                  ) : (
+                    <Image
+                      src={message.image_url}
+                      alt="Shared media"
+                      width={200}
+                      height={200}
+                      unoptimized
+                      style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', marginTop: '8px', height: 'auto' }}
+                    />
+                  )
+                )}
+                {message.sender_id === Number(userId) && (
+                  <div className="message-actions">
+                    <button onClick={() => { setEditingMessageId(message.id); setEditInput(message.content || ''); }}>
+                      <FiEdit2 size={14} />
+                    </button>
+                    <button onClick={() => handleDeleteMessage(message.id)}>
+                      <FiTrash2 size={14} />
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         ))}

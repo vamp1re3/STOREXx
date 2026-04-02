@@ -19,6 +19,8 @@ import {
   FiUpload,
   FiUserPlus,
 } from 'react-icons/fi';
+import Stories from './components/Stories';
+import CreateStory from './components/CreateStory';
 
 interface Post {
   id: number;
@@ -61,6 +63,7 @@ export default function Home() {
   const [posting, setPosting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [introHidden, setIntroHidden] = useState(false);
+  const [showCreateStory, setShowCreateStory] = useState(false);
 
   const getHeaders = useCallback((authToken?: string, includeJson = false): HeadersInit => {
     const headers: HeadersInit = {};
@@ -424,6 +427,10 @@ export default function Home() {
         </div>
       )}
 
+      {isAuthenticated && (
+        <Stories onCreateStory={() => setShowCreateStory(true)} />
+      )}
+
       {isAuthenticated ? (
         <div id="feed">
           {loading && (
@@ -557,6 +564,15 @@ export default function Home() {
           </Link>
         </div>
       )}
+
+      <CreateStory
+        isOpen={showCreateStory}
+        onClose={() => setShowCreateStory(false)}
+        onStoryCreated={() => {
+          setShowCreateStory(false);
+          // Could refresh stories here if needed
+        }}
+      />
     </div>
   );
 }

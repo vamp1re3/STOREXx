@@ -18,6 +18,16 @@ BEGIN
                    WHERE table_name = 'users' AND column_name = 'is_private') THEN
         ALTER TABLE users ADD COLUMN is_private BOOLEAN DEFAULT FALSE;
     END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'users' AND column_name = 'email_verified') THEN
+        ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT FALSE;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'users' AND column_name = 'account_status') THEN
+        ALTER TABLE users ADD COLUMN account_status VARCHAR(20) DEFAULT 'active';
+    END IF;
 END $$;
 
 -- Check if image_url column exists in messages table, add it if not
@@ -46,7 +56,111 @@ BEGIN
                    WHERE table_name = 'messages' AND column_name = 'read_at') THEN
         ALTER TABLE messages ADD COLUMN read_at TIMESTAMP;
     END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'archived') THEN
+        ALTER TABLE posts ADD COLUMN archived BOOLEAN DEFAULT FALSE;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'messages' AND column_name = 'edited_at') THEN
+        ALTER TABLE messages ADD COLUMN edited_at TIMESTAMP;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'messages' AND column_name = 'deleted_at') THEN
+        ALTER TABLE messages ADD COLUMN deleted_at TIMESTAMP;
+    END IF;
 END $$;
+
+-- Create new tables if they don't exist
+CREATE TABLE IF NOT EXISTS stories (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  image_url VARCHAR(255) NOT NULL,
+  media_type VARCHAR(20) DEFAULT 'image' NOT NULL,
+  caption TEXT,
+  archived BOOLEAN DEFAULT FALSE,
+  expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL '24 hours'),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS close_friends (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  friend_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE(user_id, friend_id)
+);
+
+CREATE TABLE IF NOT EXISTS conversations (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  other_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  muted BOOLEAN DEFAULT FALSE,
+  theme VARCHAR(50) DEFAULT 'default',
+  background VARCHAR(255),
+  archived BOOLEAN DEFAULT FALSE,
+  UNIQUE(user_id, other_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS calls (
+  id SERIAL PRIMARY KEY,
+  caller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  call_type VARCHAR(20) DEFAULT 'audio',
+  status VARCHAR(20) DEFAULT 'pending',
+  started_at TIMESTAMP,
+  ended_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS restrictions (
+  id SERIAL PRIMARY KEY,
+  restrictor_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  restricted_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(restrictor_id, restricted_id)
+);
+
+CREATE TABLE IF NOT EXISTS reports (
+  id SERIAL PRIMARY KEY,
+  reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  reported_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  reported_message_id INTEGER REFERENCES messages(id) ON DELETE CASCADE,
+  reason TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS feedback (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(50),
+  content TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for new tables
+CREATE INDEX IF NOT EXISTS idx_stories_user_id ON stories(user_id);
+CREATE INDEX IF NOT EXISTS idx_stories_expires_at ON stories(expires_at);
+CREATE INDEX IF NOT EXISTS idx_stories_created_at ON stories(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_close_friends_user_id ON close_friends(user_id);
+CREATE INDEX IF NOT EXISTS idx_close_friends_friend_id ON close_friends(friend_id);
+
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_other_user_id ON conversations(other_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_calls_caller_id ON calls(caller_id);
+CREATE INDEX IF NOT EXISTS idx_calls_receiver_id ON calls(receiver_id);
+CREATE INDEX IF NOT EXISTS idx_calls_status ON calls(status);
+
+CREATE INDEX IF NOT EXISTS idx_restrictions_restrictor_id ON restrictions(restrictor_id);
+CREATE INDEX IF NOT EXISTS idx_restrictions_restricted_id ON restrictions(restricted_id);
+
+CREATE INDEX IF NOT EXISTS idx_reports_reporter_id ON reports(reporter_id);
+CREATE INDEX IF NOT EXISTS idx_reports_reported_user_id ON reports(reported_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_feedback_user_id ON feedback(user_id);
 
 -- Create blocks, comments, and bookmarks tables if not exists
 DO $$
