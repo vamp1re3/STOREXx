@@ -103,8 +103,12 @@ export default function Chat() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected in chat');
+      return;
+    }
 
+    console.log('Chat file selected:', file.name, file.size, file.type);
     setUploading(true);
     try {
       const formData = new FormData();
@@ -124,10 +128,14 @@ export default function Chat() {
       } else {
         alert(`Upload failed: ${data.error || data.details || 'Please try a smaller file.'}`);
       }
-    } catch {
+    } catch (error) {
+      console.error('Chat upload error:', error);
       alert('Upload failed');
     } finally {
       setUploading(false);
+      // Reset file input
+      const fileInput = document.getElementById('chat-image-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     }
   };
 
@@ -288,7 +296,7 @@ export default function Chat() {
           <input
             id="chat-image-upload"
             type="file"
-            accept="image/*,video/*"
+            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/x-msvideo"
             onChange={handleFileUpload}
             style={{ display: 'none' }}
           />

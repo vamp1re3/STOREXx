@@ -10,17 +10,21 @@ const allowedUploadTypes = new Set(['profile', 'post', 'chat', 'general']);
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('Upload request received');
     const formData = await req.formData();
     const fileEntry = formData.get('file');
     const requestedType = String(formData.get('type') ?? 'general');
     const type = allowedUploadTypes.has(requestedType) ? requestedType : 'general';
 
-    const rate = checkRateLimit(getRequestKey(req, `upload:${type}`), 20, 10 * 60_000);
+    console.log('Upload type:', type, 'File entry:', !!fileEntry);
+
+    const rate = checkRateLimit(getRequestKey(req, `upload:${type}`), 50, 10 * 60_000);
     if (!rate.allowed) {
       return NextResponse.json({ error: 'Too many uploads. Please wait a few minutes before trying again.' }, { status: 429 });
     }
 
     if ((type === 'post' || type === 'chat') && !authenticate(req)) {
+      console.log('Authentication failed for upload type:', type);
       return NextResponse.json({ error: 'You must be signed in to upload this file' }, { status: 401 });
     }
 
@@ -38,11 +42,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Only image or video files are allowed' }, { status: 400 });
     }
 
-    const maxImageSize = 20 * 1024 * 1024;
-    const maxVideoSize = 80 * 1024 * 1024;
+    const maxImageSize = 10 * 1024 * 1024; // 10MB for images
+    const maxVideoSize = 50 * 1024 * 1024; // 50MB for videos
     const maxSize = file.type.startsWith('video/') ? maxVideoSize : maxImageSize;
     if (file.size > maxSize) {
-      const limitLabel = file.type.startsWith('video/') ? '80MB' : '20MB';
+      const limitLabel = file.type.startsWith('video/') ? '50MB' : '10MB';
       return NextResponse.json({ error: `File is too large. Please keep it under ${limitLabel}.` }, { status: 400 });
     }
 

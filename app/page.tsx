@@ -196,8 +196,12 @@ export default function Home() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
 
+    console.log('File selected:', file.name, file.size, file.type);
     setUploading(true);
     try {
       const formData = new FormData();
@@ -206,7 +210,7 @@ export default function Home() {
 
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: getHeaders(token ?? undefined),
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 
@@ -217,10 +221,14 @@ export default function Home() {
       } else {
         alert(`Upload failed: ${data.error || data.details || 'Please try a smaller file.'}`);
       }
-    } catch {
+    } catch (error) {
+      console.error('Upload error:', error);
       alert('Upload failed');
     } finally {
       setUploading(false);
+      // Reset file input
+      const fileInput = document.getElementById('post-media-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     }
   };
 
@@ -393,7 +401,7 @@ export default function Home() {
             <input
               id="post-media-upload"
               type="file"
-              accept="image/*,video/*"
+              accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/x-msvideo"
               onChange={handleFileUpload}
               style={{ display: 'none' }}
             />
