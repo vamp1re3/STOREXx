@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FiArrowLeft, FiEdit2, FiHome, FiMoreVertical, FiSearch, FiSend, FiSettings, FiTrash2, FiUpload } from 'react-icons/fi';
+import { FiEdit2, FiSend, FiTrash2, FiUpload } from 'react-icons/fi';
 
 interface Message {
   id: number;
@@ -190,10 +190,6 @@ export default function Chat() {
 
   return (
     <div className="container page-with-mobile-nav">
-      <button onClick={() => router.push('/')} className="back-btn">
-        <FiArrowLeft size={16} /> Back to Feed
-      </button>
-
       <div className="card chat-header-card">
         <div className="user">
           <Image
@@ -308,20 +304,6 @@ export default function Chat() {
         </button>
       </div>
 
-      <div className="mobile-bottom-nav">
-        <button onClick={() => router.push('/')} className="navButton">
-          <FiHome size={16} />
-          <span>Feed</span>
-        </button>
-        <button onClick={() => router.push('/search')} className="navButton">
-          <FiSearch size={16} />
-          <span>Search</span>
-        </button>
-        <button onClick={() => router.push('/settings')} className="navButton">
-          <FiSettings size={16} />
-          <span>Settings</span>
-        </button>
-      </div>
     </div>
   );
 }

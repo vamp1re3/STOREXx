@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiHome, FiMessageCircle, FiSearch, FiSettings } from 'react-icons/fi';
+import { FiMessageCircle } from 'react-icons/fi';
 
 interface Conversation {
   user_id: number;
@@ -68,12 +68,6 @@ export default function ChatInbox() {
 
   return (
     <div className="container page-with-mobile-nav">
-      <div className="top-bar-row">
-        <button onClick={() => router.push('/')} className="back-btn">
-          <FiArrowLeft size={16} /> Back to Feed
-        </button>
-      </div>
-
       <div className="card search-shell">
         <p className="eyebrow">Messages</p>
         <h1><FiMessageCircle size={24} /> Chats</h1>
@@ -115,21 +109,6 @@ export default function ChatInbox() {
             ))}
           </div>
         )}
-      </div>
-
-      <div className="mobile-bottom-nav">
-        <Link href="/" className="navButton">
-          <FiHome size={16} />
-          <span>Feed</span>
-        </Link>
-        <Link href="/search" className="navButton">
-          <FiSearch size={16} />
-          <span>Search</span>
-        </Link>
-        <Link href="/settings" className="navButton">
-          <FiSettings size={16} />
-          <span>Settings</span>
-        </Link>
       </div>
     </div>
   );

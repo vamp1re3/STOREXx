@@ -332,6 +332,20 @@ button:disabled {
   gap: 6px;
 }
 
+@media (max-width: 768px) {
+  .chatBox {
+    min-height: calc(100vh - 250px);
+    max-height: calc(100vh - 220px);
+    padding: 10px;
+  }
+
+  .profile-list {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+}
+
 .message-bubble {
   padding: 10px 12px;
   border-radius: 15px;
