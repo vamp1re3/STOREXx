@@ -13,6 +13,7 @@ interface User {
   profile_pic: string;
   bio?: string;
   is_private?: boolean;
+  is_seller?: boolean;
   created_at: string;
 }
 
@@ -26,7 +27,12 @@ interface ConnectionUser {
 interface Post {
   id: number;
   image_url: string;
-  caption: string;
+  title?: string;
+  description?: string;
+  price?: number;
+  condition?: string;
+  stock?: number;
+  caption?: string;
   media_type?: 'image' | 'video';
 }
 
@@ -127,7 +133,9 @@ export default function Profile() {
           <div className="user-meta">
             <b>{data.user.display_name || data.user.username}</b>
             <span className="handle">@{data.user.username}</span>
-            <span className="muted-text">{data.user.is_private ? 'Private account' : 'Public account'}</span>
+            <span className="muted-text">
+              {data.user.is_seller ? 'Seller account' : data.user.is_private ? 'Private account' : 'Public account'}
+            </span>
           </div>
         </div>
 
@@ -167,9 +175,9 @@ export default function Profile() {
         )}
       </div>
 
-      <h3>User Posts</h3>
+      <h3>Products for sale</h3>
       {data.posts.length === 0 ? (
-        <div className="card empty-state"><p>No visible posts yet.</p></div>
+        <div className="card empty-state"><p>No products listed yet.</p></div>
       ) : (
         <div className="profile-post-grid">
           {data.posts.map((post) => (
@@ -179,14 +187,18 @@ export default function Profile() {
               ) : (
                 <Image
                   src={post.image_url}
-                  alt="Post"
+                  alt={post.title || 'Product'}
                   width={600}
                   height={600}
                   unoptimized
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               )}
-              {post.caption && <div className="caption">{post.caption}</div>}
+              <div className="caption">
+                <strong>{post.title || 'Untitled product'}</strong>
+                <p>{post.description || 'No description provided.'}</p>
+                <p>${Number(post.price || 0).toFixed(2)} - {post.condition}</p>
+              </div>
             </div>
           ))}
         </div>

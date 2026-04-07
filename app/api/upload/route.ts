@@ -9,17 +9,21 @@ const allowedUploadTypes = new Set(['profile', 'post', 'chat', 'general']);
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('Upload request received');
     const formData = await req.formData();
     const fileEntry = formData.get('file');
     const requestedType = String(formData.get('type') ?? 'general');
     const type = allowedUploadTypes.has(requestedType) ? requestedType : 'general';
 
-    const rate = checkRateLimit(getRequestKey(req, `upload:${type}`), 20, 10 * 60_000);
+    console.log('Upload type:', type, 'File entry:', !!fileEntry);
+
+    const rate = checkRateLimit(getRequestKey(req, `upload:${type}`), 50, 10 * 60_000);
     if (!rate.allowed) {
       return NextResponse.json({ error: 'Too many uploads. Please wait a few minutes before trying again.' }, { status: 429 });
     }
 
     if ((type === 'post' || type === 'chat') && !authenticate(req)) {
+      console.log('Authentication failed for upload type:', type);
       return NextResponse.json({ error: 'You must be signed in to upload this file' }, { status: 401 });
     }
 

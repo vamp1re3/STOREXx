@@ -20,6 +20,11 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'users' AND column_name = 'is_seller') THEN
+        ALTER TABLE users ADD COLUMN is_seller BOOLEAN DEFAULT FALSE;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                    WHERE table_name = 'users' AND column_name = 'email_verified') THEN
         ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT FALSE;
     END IF;
@@ -45,6 +50,41 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                    WHERE table_name = 'posts' AND column_name = 'media_type') THEN
         ALTER TABLE posts ADD COLUMN media_type VARCHAR(20) DEFAULT 'image' NOT NULL;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'title') THEN
+        ALTER TABLE posts ADD COLUMN title VARCHAR(255) NOT NULL DEFAULT '';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'description') THEN
+        ALTER TABLE posts ADD COLUMN description TEXT;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'price') THEN
+        ALTER TABLE posts ADD COLUMN price NUMERIC(10,2) DEFAULT 0.00 NOT NULL;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'condition') THEN
+        ALTER TABLE posts ADD COLUMN condition VARCHAR(50) DEFAULT 'new' NOT NULL;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'stock') THEN
+        ALTER TABLE posts ADD COLUMN stock INTEGER DEFAULT 1 NOT NULL;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'discount_percent') THEN
+        ALTER TABLE posts ADD COLUMN discount_percent INTEGER DEFAULT 0 NOT NULL;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'posts' AND column_name = 'is_visible') THEN
+        ALTER TABLE posts ADD COLUMN is_visible BOOLEAN DEFAULT TRUE NOT NULL;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns
@@ -190,6 +230,17 @@ BEGIN
           id SERIAL PRIMARY KEY,
           user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
           post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(user_id, post_id)
+        );
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'cart_items') THEN
+        CREATE TABLE cart_items (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+          quantity INTEGER DEFAULT 1 NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           UNIQUE(user_id, post_id)
         );

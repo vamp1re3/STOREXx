@@ -15,6 +15,7 @@ import {
   FiMessageSquare,
   FiSearch,
   FiSettings,
+  FiShoppingCart,
   FiTrash2,
   FiUpload,
   FiUserPlus,
@@ -29,7 +30,12 @@ interface Post {
   display_name: string;
   profile_pic: string;
   image_url: string;
-  caption: string;
+  title: string;
+  description: string;
+  price: number;
+  condition: string;
+  stock: number;
+  discount_percent: number;
   like_count: number;
   comment_count: number;
   is_liked: boolean;
@@ -58,7 +64,12 @@ export default function Home() {
   const [activeCommentsPostId, setActiveCommentsPostId] = useState<number | null>(null);
   const [mediaUrl, setMediaUrl] = useState('');
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
-  const [caption, setCaption] = useState('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [condition, setCondition] = useState('new');
+  const [stock, setStock] = useState('1');
+  const [discountPercent, setDiscountPercent] = useState('0');
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -196,8 +207,12 @@ export default function Home() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
 
+    console.log('File selected:', file.name, file.size, file.type);
     setUploading(true);
     try {
       const formData = new FormData();
@@ -206,7 +221,7 @@ export default function Home() {
 
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: getHeaders(token ?? undefined),
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 
@@ -217,25 +232,43 @@ export default function Home() {
       } else {
         alert(`Upload failed: ${data.error || data.details || 'Please try a smaller file.'}`);
       }
-    } catch {
+    } catch (error) {
+      console.error('Upload error:', error);
       alert('Upload failed');
     } finally {
       setUploading(false);
+      // Reset file input
+      const fileInput = document.getElementById('post-media-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     }
   };
 
   const post = async () => {
-    if (!isAuthenticated || !mediaUrl.trim()) return;
+    if (!isAuthenticated || !mediaUrl.trim() || !title.trim()) return;
 
     setPosting(true);
     try {
       await fetch('/api/posts', {
         method: 'POST',
         headers: getHeaders(token ?? undefined, true),
-        body: JSON.stringify({ image_url: mediaUrl, media_type: mediaType, caption }),
+        body: JSON.stringify({
+          image_url: mediaUrl,
+          title,
+          description,
+          price: Number(price) || 0,
+          condition,
+          stock: Number(stock) || 1,
+          discount_percent: Number(discountPercent) || 0,
+          media_type: mediaType,
+        }),
       });
       setMediaUrl('');
-      setCaption('');
+      setTitle('');
+      setDescription('');
+      setPrice('');
+      setCondition('new');
+      setStock('1');
+      setDiscountPercent('0');
       setMediaType('image');
       await loadPosts(token ?? undefined);
     } catch (error) {
@@ -292,7 +325,7 @@ export default function Home() {
   };
 
   const deletePost = async (postId: number) => {
-    if (!confirm('Delete this post?')) {
+    if (!confirm('Delete this product?')) {
       return;
     }
 
@@ -303,11 +336,32 @@ export default function Home() {
 
     const data = await res.json();
     if (!res.ok) {
-      alert(data.error || 'Could not delete post');
+      alert(data.error || 'Could not delete product');
       return;
     }
 
     await loadPosts(token ?? undefined);
+  };
+
+  const addToCart = async (postId: number) => {
+    if (!isAuthenticated) {
+      alert('Please log in to add items to your cart.');
+      return;
+    }
+
+    const res = await fetch('/api/cart', {
+      method: 'POST',
+      headers: getHeaders(token ?? undefined, true),
+      body: JSON.stringify({ post_id: postId, quantity: 1 }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || 'Failed to add item to cart');
+      return;
+    }
+
+    alert('Added to cart');
   };
 
   const toggleIntro = () => {
@@ -326,7 +380,7 @@ export default function Home() {
           <h1 className="brand-title">HELKET</h1>
           {!introHidden && (
             <p className="brand-subtitle">
-              Share photos, short clips, and private moments in a polished mobile-first feed.
+              Buy from sellers or list products with price, stock and discounts in a modern marketplace experience.
             </p>
           )}
         </div>
@@ -376,10 +430,10 @@ export default function Home() {
         <div className="card composer-card" id="postBox">
           <div className="composer-header">
             <div>
-              <p className="eyebrow">Create</p>
-              <h3>New post</h3>
+              <p className="eyebrow">Seller tools</p>
+              <h3>List a product</h3>
             </div>
-            <span className="composer-hint">{mediaUrl ? 'Media ready' : 'Photo or video'}</span>
+            <span className="composer-hint">{mediaUrl ? 'Product image ready' : 'Upload product image or video'}</span>
           </div>
           <div className="file-upload">
             <label
@@ -393,7 +447,7 @@ export default function Home() {
             <input
               id="post-media-upload"
               type="file"
-              accept="image/*,video/*"
+              accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/x-msvideo"
               onChange={handleFileUpload}
               style={{ display: 'none' }}
             />
@@ -402,7 +456,7 @@ export default function Home() {
                 {mediaType === 'image' ? (
                   <Image
                     src={mediaUrl}
-                    alt="Post preview"
+                    alt="Product preview"
                     width={100}
                     height={100}
                     unoptimized
@@ -414,15 +468,55 @@ export default function Home() {
               </div>
             )}
           </div>
+
           <input
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="Caption (optional)"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Product title"
           />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Product description"
+          />
+          <div className="product-meta-row">
+            <input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="Price"
+              type="number"
+              min="0"
+              step="0.01"
+            />
+            <input
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              placeholder="Stock"
+              type="number"
+              min="1"
+            />
+            <input
+              value={discountPercent}
+              onChange={(e) => setDiscountPercent(e.target.value)}
+              placeholder="Discount %"
+              type="number"
+              min="0"
+              max="100"
+            />
+          </div>
+          <select value={condition} onChange={(e) => setCondition(e.target.value)}>
+            <option value="new">New</option>
+            <option value="like new">Like new</option>
+            <option value="used">Used</option>
+            <option value="refurbished">Refurbished</option>
+          </select>
           <div className="button-group">
-            <button onClick={post} disabled={posting || !mediaUrl.trim()}>
-              {posting ? 'Posting...' : 'Post'}
+            <button onClick={post} disabled={posting || !mediaUrl.trim() || !title.trim()}>
+              {posting ? 'Listing...' : 'List Product'}
             </button>
+            <Link href="/cart" className="navButton">
+              <FiShoppingCart size={16} /> View Cart
+            </Link>
           </div>
         </div>
       )}
@@ -477,7 +571,7 @@ export default function Home() {
               ) : (
                 <Image
                   src={postItem.image_url}
-                  alt="Post"
+                  alt={postItem.title}
                   width={800}
                   height={800}
                   unoptimized
@@ -485,30 +579,36 @@ export default function Home() {
                 />
               )}
 
-              <div className="caption">{postItem.caption || 'Shared a new moment.'}</div>
+              <div className="product-details">
+                <h3>{postItem.title || 'Untitled product'}</h3>
+                <p className="muted-text">{postItem.description || 'No product description provided.'}</p>
+                <div className="price-row">
+                  <span className="price">${(postItem.price || 0).toFixed(2)}</span>
+                  {postItem.discount_percent > 0 && (
+                    <span className="discount">{postItem.discount_percent}% off</span>
+                  )}
+                </div>
+                <div className="meta-row">
+                  <span>{postItem.condition}</span>
+                  <span>{postItem.stock} in stock</span>
+                </div>
+              </div>
 
               <div className="actions">
-                <button
-                  className={`likeBtn ${postItem.is_liked ? 'liked' : ''}`}
-                  onClick={() => void toggleLike(postItem.id)}
-                >
-                  <FiHeart size={16} /> {postItem.like_count || 0}
+                <button className="profileBtn" onClick={() => void addToCart(postItem.id)}>
+                  <FiShoppingCart size={16} /> Add to cart
                 </button>
-
                 <button className="profileBtn" onClick={() => void toggleComments(postItem.id)}>
                   <FiMessageSquare size={16} /> {postItem.comment_count || 0}
                 </button>
-
                 <button className={`profileBtn ${postItem.is_bookmarked ? 'liked' : ''}`} onClick={() => void toggleBookmark(postItem.id)}>
                   <FiBookmark size={16} /> Save
                 </button>
-
                 <Link href={`/chat/${postItem.user_id}`} className="chatBtn">
                   <FiMessageCircle size={16} />
                   Chat
                   {unreadCounts[postItem.user_id] ? <span className="badge-dot">{unreadCounts[postItem.user_id]}</span> : null}
                 </Link>
-
                 {currentUserId === postItem.user_id && (
                   <button className="logoutBtn" onClick={() => void deletePost(postItem.id)}>
                     <FiTrash2 size={16} /> Delete

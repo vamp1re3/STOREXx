@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
       `SELECT posts.*, users.username, users.display_name, users.profile_pic
        FROM posts
        JOIN users ON posts.user_id = users.id
-       WHERE posts.caption ILIKE $1
+       WHERE posts.is_visible = true
+         AND (posts.title ILIKE $1 OR posts.description ILIKE $1 OR posts.caption ILIKE $1)
          AND NOT EXISTS (
            SELECT 1 FROM blocks
            WHERE (blocker_id = $2 AND blocked_id = posts.user_id)

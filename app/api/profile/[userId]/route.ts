@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
     const targetUserId = Number(userId);
 
     const user = await pool.query(
-      'SELECT id, username, display_name, bio, is_private, profile_pic, created_at FROM users WHERE id=$1',
+      'SELECT id, username, display_name, bio, is_private, is_seller, profile_pic, created_at FROM users WHERE id=$1',
       [targetUserId]
     );
 
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ userId:
 
     const posts = isBlocked || isBlocker || !canViewPosts
       ? { rows: [] }
-      : await pool.query('SELECT * FROM posts WHERE user_id=$1 ORDER BY created_at DESC', [targetUserId]);
+      : await pool.query('SELECT * FROM posts WHERE user_id=$1 AND is_visible = true ORDER BY created_at DESC', [targetUserId]);
 
     return NextResponse.json({
       user: user.rows[0],

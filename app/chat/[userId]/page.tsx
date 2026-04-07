@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FiArrowLeft, FiEdit2, FiHome, FiMoreVertical, FiSearch, FiSend, FiSettings, FiTrash2, FiUpload } from 'react-icons/fi';
+import { FiEdit2, FiSend, FiTrash2, FiUpload } from 'react-icons/fi';
 
 interface Message {
   id: number;
@@ -103,8 +103,12 @@ export default function Chat() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected in chat');
+      return;
+    }
 
+    console.log('Chat file selected:', file.name, file.size, file.type);
     setUploading(true);
     try {
       const formData = new FormData();
@@ -124,10 +128,14 @@ export default function Chat() {
       } else {
         alert(`Upload failed: ${data.error || data.details || 'Please try a smaller file.'}`);
       }
-    } catch {
+    } catch (error) {
+      console.error('Chat upload error:', error);
       alert('Upload failed');
     } finally {
       setUploading(false);
+      // Reset file input
+      const fileInput = document.getElementById('chat-image-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     }
   };
 
@@ -190,10 +198,6 @@ export default function Chat() {
 
   return (
     <div className="container page-with-mobile-nav">
-      <button onClick={() => router.push('/')} className="back-btn">
-        <FiArrowLeft size={16} /> Back to Feed
-      </button>
-
       <div className="card chat-header-card">
         <div className="user">
           <Image
@@ -292,7 +296,7 @@ export default function Chat() {
           <input
             id="chat-image-upload"
             type="file"
-            accept="image/*,video/*"
+            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/x-msvideo"
             onChange={handleFileUpload}
             style={{ display: 'none' }}
           />
@@ -308,20 +312,6 @@ export default function Chat() {
         </button>
       </div>
 
-      <div className="mobile-bottom-nav">
-        <button onClick={() => router.push('/')} className="navButton">
-          <FiHome size={16} />
-          <span>Feed</span>
-        </button>
-        <button onClick={() => router.push('/search')} className="navButton">
-          <FiSearch size={16} />
-          <span>Search</span>
-        </button>
-        <button onClick={() => router.push('/settings')} className="navButton">
-          <FiSettings size={16} />
-          <span>Settings</span>
-        </button>
-      </div>
     </div>
   );
 }

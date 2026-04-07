@@ -23,11 +23,12 @@ export async function GET(req: NextRequest) {
               ) THEN true ELSE false END AS is_bookmarked
        FROM posts
        JOIN users ON posts.user_id = users.id
-       WHERE NOT EXISTS(
-         SELECT 1 FROM blocks
-         WHERE (blocker_id = $1 AND blocked_id = posts.user_id)
-            OR (blocker_id = posts.user_id AND blocked_id = $1)
-       )
+       WHERE posts.is_visible = true
+         AND NOT EXISTS(
+           SELECT 1 FROM blocks
+           WHERE (blocker_id = $1 AND blocked_id = posts.user_id)
+              OR (blocker_id = posts.user_id AND blocked_id = $1)
+         )
          AND (
            COALESCE(users.is_private, false) = false
            OR users.id = $1
@@ -53,15 +54,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { image_url, caption, media_type } = await req.json();
-    if (!image_url) {
-      return NextResponse.json({ error: 'Media URL is required' }, { status: 400 });
+    const { image_url, title, description, price, condition, stock, discount_percent, media_type } = await req.json();
+    if (!image_url || !title) {
+      return NextResponse.json({ error: 'Image URL and title are required' }, { status: 400 });
     }
 
     const type = media_type === 'video' ? 'video' : 'image';
     await pool.query(
-      'INSERT INTO posts (user_id, image_url, media_type, caption) VALUES ($1, $2, $3, $4)',
-      [authUser.id, image_url, type, caption || '']
+      `INSERT INTO posts (user_id, image_url, media_type, title, description, price, condition, stock, discount_percent)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [authUser.id, image_url, type, String(title).trim(), description || '', Number(price) || 0, condition || 'new', Number(stock) || 1, Number(discount_percent) || 0]
     );
 
     return NextResponse.json({ message: 'Posted' });

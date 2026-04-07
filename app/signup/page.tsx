@@ -14,6 +14,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePic, setProfilePic] = useState('');
+  const [isSeller, setIsSeller] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -105,6 +106,7 @@ export default function Signup() {
       display_name: displayName,
       email,
       profile_pic: profilePic,
+      is_seller: isSeller,
     };
 
     if (googleData) {
@@ -151,6 +153,11 @@ export default function Signup() {
         <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
         <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display Name (optional)" />
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" disabled={!!googleData} />
+
+        <label className="checkbox-label">
+          <input type="checkbox" checked={isSeller} onChange={(e) => setIsSeller(e.target.checked)} />
+          Become a seller on HELKET to post products, manage stock, discounts, and chat with buyers.
+        </label>
 
         {!googleData && (
           <>

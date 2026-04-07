@@ -7,6 +7,7 @@ CREATE TABLE users (
   display_name VARCHAR(100),
   bio TEXT DEFAULT '',
   is_private BOOLEAN DEFAULT FALSE,
+  is_seller BOOLEAN DEFAULT FALSE,
   email VARCHAR(100) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   profile_pic VARCHAR(255),
@@ -20,13 +21,19 @@ CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_created_at ON users(created_at DESC);
 
--- Posts table
+-- Posts table (marketplace items)
 CREATE TABLE posts (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   image_url VARCHAR(255) NOT NULL,
   media_type VARCHAR(20) DEFAULT 'image' NOT NULL,
-  caption TEXT,
+  title VARCHAR(255) NOT NULL DEFAULT '',
+  description TEXT,
+  price NUMERIC(10,2) DEFAULT 0.00 NOT NULL,
+  condition VARCHAR(50) DEFAULT 'new' NOT NULL,
+  stock INTEGER DEFAULT 1 NOT NULL,
+  discount_percent INTEGER DEFAULT 0 NOT NULL,
+  is_visible BOOLEAN DEFAULT TRUE NOT NULL,
   archived BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -183,6 +190,15 @@ CREATE TABLE bookmarks (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, post_id)
+);
+
+CREATE TABLE cart_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  quantity INTEGER DEFAULT 1 NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, post_id)
 );

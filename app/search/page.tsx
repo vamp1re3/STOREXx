@@ -24,7 +24,7 @@ interface PostResult {
   caption: string;
 }
 
-type SearchTab = 'users' | 'posts' | 'videos';
+type SearchTab = 'users' | 'products' | 'videos';
 
 export default function Search() {
   const [token, setToken] = useState<string | null>(null);
@@ -120,7 +120,7 @@ export default function Search() {
       <div className="card search-shell">
         <p className="eyebrow">Discover</p>
         <h1><FiSearch size={26} /> Search</h1>
-        <p className="brand-subtitle">Find people, photo posts, and videos with a faster explore-style search.</p>
+        <p className="brand-subtitle">Find sellers, products, and marketplace listings with a faster explore-style search.</p>
 
         <div className="message-input" style={{ padding: '10px 0' }}>
           <input
@@ -138,8 +138,8 @@ export default function Search() {
           <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
             <FiUser size={16} /> Users
           </button>
-          <button className={`tab-btn ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}>
-            <FiFilm size={16} /> Posts
+          <button className={`tab-btn ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')}>
+            <FiFilm size={16} /> Products
           </button>
           <button className={`tab-btn ${activeTab === 'videos' ? 'active' : ''}`} onClick={() => setActiveTab('videos')}>
             <FiFilm size={16} /> Videos
@@ -181,9 +181,9 @@ export default function Search() {
           </div>
         )}
 
-        {activeTab === 'posts' && posts.length > 0 && (
+        {activeTab === 'products' && posts.length > 0 && (
           <div>
-            <h2><FiFilm size={16} /> Posts</h2>
+            <h2><FiFilm size={16} /> Products</h2>
             <div className="feed-list">
               {posts.map((post) => (
                 <div key={post.id} className="post media-post-card">

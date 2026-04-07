@@ -332,6 +332,20 @@ button:disabled {
   gap: 6px;
 }
 
+@media (max-width: 768px) {
+  .chatBox {
+    min-height: calc(100vh - 250px);
+    max-height: calc(100vh - 220px);
+    padding: 10px;
+  }
+
+  .profile-list {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+}
+
 .message-bubble {
   padding: 10px 12px;
   border-radius: 15px;
@@ -561,6 +575,60 @@ button:disabled {
 
 .page-with-mobile-nav {
   padding-bottom: 88px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 8px 120px;
+  }
+
+  .card,
+  .post,
+  .chatBox,
+  .profile-list,
+  .settings-section {
+    border-radius: 14px;
+  }
+
+  .post {
+    margin-bottom: 12px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .message-input {
+    gap: 6px;
+  }
+
+  .message-input input {
+    font-size: 0.95rem;
+  }
+
+  .user,
+  .conversation-card {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .user-meta,
+  .profile-list,
+  .conversation-card {
+    min-width: 100%;
+  }
+
+  .profile-list {
+    max-height: calc(100vh - 240px);
+    overflow-y: auto;
+    padding-right: 3px;
+  }
+
+  .top-bar-row {
+    padding-bottom: 8px;
+  }
 }
 
 .mobile-bottom-nav .navButton,

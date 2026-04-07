@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Too many signup attempts. Please wait a minute and try again.' }, { status: 429 });
     }
 
-    const { username, display_name, email, password, profile_pic } = await req.json();
+    const { username, display_name, email, password, profile_pic, is_seller } = await req.json();
 
     if (!username || !email || !password) {
       return NextResponse.json({ error: 'Username, email, and password are required' }, { status: 400 });
@@ -23,10 +23,10 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      `INSERT INTO users (username, display_name, email, password, profile_pic)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, username, display_name, profile_pic`,
-      [String(username).trim(), display_name || username, String(email).trim().toLowerCase(), hashedPassword, profile_pic || null]
+      `INSERT INTO users (username, display_name, email, password, profile_pic, is_seller)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, username, display_name, profile_pic, is_seller`,
+      [String(username).trim(), display_name || username, String(email).trim().toLowerCase(), hashedPassword, profile_pic || null, Boolean(is_seller)]
     );
 
     const createdUser = result.rows[0];
