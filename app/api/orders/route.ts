@@ -30,6 +30,9 @@ export async function POST(req: NextRequest) {
 
     // Validate stock and create orders
     const orders = [];
+    const stockUpdateValues: [number, number][] = [];
+    const cartDeleteIds: number[] = [];
+
     for (const item of cartItems.rows) {
       if (item.quantity > item.stock) {
         return NextResponse.json({
@@ -46,17 +49,19 @@ export async function POST(req: NextRequest) {
       `, [authUser.id, item.seller_id, item.post_id, item.quantity, totalAmount, shippingAddress || null, notes || null]);
 
       orders.push(orderResult.rows[0]);
-
-      // Update product stock
-      await pool.query(`
-        UPDATE posts SET stock = stock - $1 WHERE id = $2
-      `, [item.quantity, item.post_id]);
-
-      // Remove from cart
-      await pool.query(`
-        DELETE FROM cart_items WHERE id = $1
-      `, [item.id]);
+      stockUpdateValues.push([item.quantity, item.post_id]);
+      cartDeleteIds.push(item.id);
     }
+
+    // Parallelize stock updates and cart deletions
+    await Promise.all([
+      // Batch update stock for all items
+      Promise.all(stockUpdateValues.map(([quantity, postId]) =>
+        pool.query(`UPDATE posts SET stock = stock - $1 WHERE id = $2`, [quantity, postId])
+      )),
+      // Batch delete cart items
+      pool.query(`DELETE FROM cart_items WHERE id = ANY($1)`, [cartDeleteIds])
+    ]);
 
     return NextResponse.json({
       message: 'Orders created successfully',

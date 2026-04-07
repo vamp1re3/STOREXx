@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { FiPhone, FiVideo } from 'react-icons/fi';
 import CallInterface from './CallInterface';
 
@@ -12,7 +12,7 @@ interface CallButtonProps {
   callType: 'audio' | 'video';
 }
 
-export default function CallButton({
+function CallButtonContent({
   userId,
   userName,
   userDisplayName,
@@ -23,7 +23,7 @@ export default function CallButton({
   const [currentCall, setCurrentCall] = useState<any>(null);
   const [isIncoming, setIsIncoming] = useState(false);
 
-  const initiateCall = async () => {
+  const initiateCall = useCallback(async () => {
     try {
       const res = await fetch('/api/calls', {
         method: 'POST',
@@ -40,9 +40,9 @@ export default function CallButton({
     } catch (error) {
       console.error('Error initiating call:', error);
     }
-  };
+  }, [userId, callType]);
 
-  const handleAccept = async () => {
+  const handleAccept = useCallback(async () => {
     if (!currentCall) return;
 
     try {
@@ -59,9 +59,9 @@ export default function CallButton({
     } catch (error) {
       console.error('Error accepting call:', error);
     }
-  };
+  }, [currentCall]);
 
-  const handleReject = async () => {
+  const handleReject = useCallback(async () => {
     if (!currentCall) return;
 
     try {
@@ -78,9 +78,9 @@ export default function CallButton({
     } catch (error) {
       console.error('Error rejecting call:', error);
     }
-  };
+  }, [currentCall]);
 
-  const handleEnd = async () => {
+  const handleEnd = useCallback(async () => {
     if (!currentCall) return;
 
     try {
@@ -97,12 +97,12 @@ export default function CallButton({
     } catch (error) {
       console.error('Error ending call:', error);
     }
-  };
+  }, [currentCall]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsCalling(false);
     setCurrentCall(null);
-  };
+  }, []);
 
   return (
     <>
@@ -133,3 +133,7 @@ export default function CallButton({
     </>
   );
 }
+
+// Memoize to prevent unnecessary re-renders from parent components
+const CallButton = memo(CallButtonContent);
+export default CallButton;

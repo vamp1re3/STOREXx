@@ -20,22 +20,17 @@ export async function GET(req: NextRequest) {
               users.profile_pic,
               COALESCE(unread.count, 0)::int AS unread_count
        FROM (
-         SELECT DISTINCT ON (partner_id)
-                partner_id AS user_id,
-                content,
-                image_url,
-                media_type,
-                created_at
-         FROM (
-           SELECT CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END AS partner_id,
+         SELECT * FROM (
+           SELECT CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END AS user_id,
                   content,
                   image_url,
                   media_type,
-                  created_at
+                  created_at,
+                  ROW_NUMBER() OVER (PARTITION BY CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END ORDER BY created_at DESC) as rn
            FROM messages
            WHERE sender_id = $1 OR receiver_id = $1
-         ) message_pairs
-         ORDER BY partner_id, created_at DESC
+         ) ranked
+         WHERE rn = 1
        ) convo
        JOIN users ON users.id = convo.user_id
        LEFT JOIN (

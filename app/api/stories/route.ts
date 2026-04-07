@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       FROM stories s
       JOIN users u ON s.user_id = u.id
       WHERE (s.user_id = $1 OR s.user_id IN (
-        SELECT followed_id FROM follows WHERE follower_id = $1
+        SELECT following_id FROM follows WHERE follower_id = $1
       ))
       AND s.expires_at > NOW()
       AND s.archived = false

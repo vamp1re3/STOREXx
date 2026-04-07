@@ -13,16 +13,16 @@ export async function GET(req: NextRequest) {
 
     const result = await pool.query(
       `SELECT posts.*, users.username, users.display_name, users.profile_pic,
-              (SELECT COUNT(*)::int FROM likes WHERE likes.post_id = posts.id) AS like_count,
-              (SELECT COUNT(*)::int FROM comments WHERE comments.post_id = posts.id) AS comment_count,
-              CASE WHEN EXISTS(
-                SELECT 1 FROM likes WHERE likes.post_id = posts.id AND likes.user_id = $1
-              ) THEN true ELSE false END AS is_liked,
-              CASE WHEN EXISTS(
-                SELECT 1 FROM bookmarks WHERE bookmarks.post_id = posts.id AND bookmarks.user_id = $1
-              ) THEN true ELSE false END AS is_bookmarked
+              COUNT(DISTINCT likes.id)::int AS like_count,
+              COUNT(DISTINCT comments.id)::int AS comment_count,
+              CASE WHEN liked_by_user.id IS NOT NULL THEN true ELSE false END AS is_liked,
+              CASE WHEN bookmarked_by_user.id IS NOT NULL THEN true ELSE false END AS is_bookmarked
        FROM posts
        JOIN users ON posts.user_id = users.id
+       LEFT JOIN likes ON likes.post_id = posts.id
+       LEFT JOIN comments ON comments.post_id = posts.id
+       LEFT JOIN likes liked_by_user ON liked_by_user.post_id = posts.id AND liked_by_user.user_id = $1
+       LEFT JOIN bookmarks bookmarked_by_user ON bookmarked_by_user.post_id = posts.id AND bookmarked_by_user.user_id = $1
        WHERE posts.is_visible = true
          AND NOT EXISTS(
            SELECT 1 FROM blocks
@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
              SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = users.id
            )
          )
+       GROUP BY posts.id, users.id
        ORDER BY posts.created_at DESC`,
       [userId]
     );
