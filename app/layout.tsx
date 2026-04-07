@@ -28,7 +28,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col seller-theme">
+      <body className="min-h-full flex flex-col logout-theme">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

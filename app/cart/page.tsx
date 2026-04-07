@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiShoppingCart, FiTrash2, FiMessageCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiHome, FiPackage, FiSearch, FiSettings, FiShoppingCart, FiTrash2, FiMessageCircle } from 'react-icons/fi';
 
 interface CartItem {
   cart_item_id: number;
@@ -27,6 +27,7 @@ interface CartItem {
 
 export default function CartPage() {
   const [token, setToken] = useState<string | null>(null);
+  const [userMode, setUserMode] = useState<string>('buyer');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [subtotal, setSubtotal] = useState(0);
   const [total, setTotal] = useState(0);
@@ -64,6 +65,17 @@ export default function CartPage() {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       setToken(storedToken);
+      // Get user mode for mobile nav
+      try {
+        fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${storedToken}` },
+        })
+          .then(res => res.json())
+          .then(data => setUserMode(data.current_mode || 'buyer'))
+          .catch(() => setUserMode('buyer'));
+      } catch (error) {
+        console.error('Failed to get user mode:', error);
+      }
     }
     void loadCart();
   }, [loadCart]);
@@ -144,6 +156,38 @@ export default function CartPage() {
             <button className="primaryBtn" onClick={() => router.push('/checkout')}>Proceed to checkout</button>
           </div>
         )}
+
+      <div className="mobile-bottom-nav">
+        <Link href="/" className="navButton">
+          <FiHome size={16} />
+          <span>Feed</span>
+        </Link>
+        <Link href="/search" className="navButton">
+          <FiSearch size={16} />
+          <span>Search</span>
+        </Link>
+        {userMode === 'buyer' && (
+          <>
+            <Link href="/cart" className="navButton">
+              <FiShoppingCart size={16} />
+              <span>Cart</span>
+            </Link>
+            <Link href="/buyer-orders" className="navButton">
+              <FiPackage size={16} />
+              <span>Orders</span>
+            </Link>
+          </>
+        )}
+        {userMode === 'seller' && (
+          <Link href="/seller-orders" className="navButton">
+            <FiPackage size={16} />
+            <span>Sales</span>
+          </Link>
+        )}
+        <Link href="/settings" className="navButton">
+          <FiSettings size={16} />
+          <span>Settings</span>
+        </Link>
       </div>
     </div>
   );
