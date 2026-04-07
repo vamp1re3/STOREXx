@@ -14,7 +14,12 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePic, setProfilePic] = useState('');
-  const [isSeller, setIsSeller] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(['buyer']);
+  const [bankName, setBankName] = useState('');
+  const [accountHolderName, setAccountHolderName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [routingNumber, setRoutingNumber] = useState('');
+  const [bankAddress, setBankAddress] = useState('');
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -106,8 +111,17 @@ export default function Signup() {
       display_name: displayName,
       email,
       profile_pic: profilePic,
-      is_seller: isSeller,
+      roles: selectedRoles,
     };
+
+    // Add bank details if user is a seller
+    if (selectedRoles.includes('seller')) {
+      signupData.bank_name = bankName;
+      signupData.account_holder_name = accountHolderName;
+      signupData.account_number = accountNumber;
+      signupData.routing_number = routingNumber;
+      signupData.bank_address = bankAddress;
+    }
 
     if (googleData) {
       signupData.google_id = googleData.google_id;
@@ -154,10 +168,75 @@ export default function Signup() {
         <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display Name (optional)" />
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" disabled={!!googleData} />
 
-        <label className="checkbox-label">
-          <input type="checkbox" checked={isSeller} onChange={(e) => setIsSeller(e.target.checked)} />
-          Become a seller on HELKET to post products, manage stock, discounts, and chat with buyers.
-        </label>
+        <div className="role-selection">
+          <p className="role-title">Choose your account type(s):</p>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={selectedRoles.includes('buyer')}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedRoles(prev => [...prev, 'buyer']);
+                } else {
+                  setSelectedRoles(prev => prev.filter(r => r !== 'buyer'));
+                }
+              }}
+            />
+            <span className="role-description">
+              <strong>Buyer:</strong> Browse products, add to cart, chat with sellers, make purchases
+            </span>
+          </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={selectedRoles.includes('seller')}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedRoles(prev => [...prev, 'seller']);
+                } else {
+                  setSelectedRoles(prev => prev.filter(r => r !== 'seller'));
+                }
+              }}
+            />
+            <span className="role-description">
+              <strong>Seller:</strong> List products, manage inventory, set prices/discounts, chat with buyers
+            </span>
+          </label>
+        </div>
+
+        {selectedRoles.includes('seller') && (
+          <div className="bank-details-section">
+            <p className="section-title">Bank Details (Required for Sellers)</p>
+            <p className="section-subtitle">Buyers will use this information to transfer payment for your products.</p>
+
+            <input
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              placeholder="Bank Name"
+            />
+            <input
+              value={accountHolderName}
+              onChange={(e) => setAccountHolderName(e.target.value)}
+              placeholder="Account Holder Name"
+            />
+            <input
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+              placeholder="Account Number"
+            />
+            <input
+              value={routingNumber}
+              onChange={(e) => setRoutingNumber(e.target.value)}
+              placeholder="Routing Number (if applicable)"
+            />
+            <textarea
+              value={bankAddress}
+              onChange={(e) => setBankAddress(e.target.value)}
+              placeholder="Bank Address"
+              rows={3}
+            />
+          </div>
+        )}
 
         {!googleData && (
           <>

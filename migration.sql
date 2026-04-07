@@ -20,13 +20,61 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns
-                   WHERE table_name = 'users' AND column_name = 'is_seller') THEN
-        ALTER TABLE users ADD COLUMN is_seller BOOLEAN DEFAULT FALSE;
+                   WHERE table_name = 'users' AND column_name = 'current_mode') THEN
+        ALTER TABLE users ADD COLUMN current_mode VARCHAR(20) DEFAULT 'buyer' NOT NULL;
+    END IF;
+
+    -- Migrate existing is_seller to user_roles
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_name = 'users' AND column_name = 'is_seller') THEN
+        -- Create user_roles table if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_roles') THEN
+            CREATE TABLE user_roles (
+              id SERIAL PRIMARY KEY,
+              user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+              role VARCHAR(20) NOT NULL,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE(user_id, role)
+            );
+        END IF;
+
+        -- Migrate existing sellers to user_roles
+        INSERT INTO user_roles (user_id, role)
+        SELECT id, 'seller' FROM users WHERE is_seller = true
+        ON CONFLICT (user_id, role) DO NOTHING;
+
+        -- Add buyer role to all users
+        INSERT INTO user_roles (user_id, role)
+        SELECT id, 'buyer' FROM users
+        ON CONFLICT (user_id, role) DO NOTHING;
+
+        -- Drop the old column
+        ALTER TABLE users DROP COLUMN is_seller;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns
-                   WHERE table_name = 'users' AND column_name = 'email_verified') THEN
-        ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT FALSE;
+                   WHERE table_name = 'users' AND column_name = 'bank_name') THEN
+        ALTER TABLE users ADD COLUMN bank_name VARCHAR(100);
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'users' AND column_name = 'account_holder_name') THEN
+        ALTER TABLE users ADD COLUMN account_holder_name VARCHAR(100);
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'users' AND column_name = 'account_number') THEN
+        ALTER TABLE users ADD COLUMN account_number VARCHAR(50);
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'users' AND column_name = 'routing_number') THEN
+        ALTER TABLE users ADD COLUMN routing_number VARCHAR(50);
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'users' AND column_name = 'bank_address') THEN
+        ALTER TABLE users ADD COLUMN bank_address TEXT;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns
@@ -357,4 +405,37 @@ CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id);
 CREATE INDEX IF NOT EXISTS idx_bookmarks_post_id ON bookmarks(post_id);
 
 -- Verify the migration completed successfully
+-- Create cart_items and orders tables if they don't exist
+CREATE TABLE IF NOT EXISTS cart_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  quantity INTEGER DEFAULT 1 NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, post_id)
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+  id SERIAL PRIMARY KEY,
+  buyer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL,
+  total_amount NUMERIC(10,2) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending' NOT NULL,
+  payment_receipt_url VARCHAR(255),
+  shipping_address TEXT,
+  notes TEXT,
+  paid_at TIMESTAMP,
+  shipped_at TIMESTAMP,
+  delivered_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for cart_items and orders
+CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_orders_buyer_id ON orders(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_seller_id ON orders(seller_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+
 SELECT 'Migration completed successfully!' as status;

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiEye, FiEyeOff, FiFlag, FiHome, FiLock, FiLogOut, FiMessageCircle, FiSave, FiSearch, FiSettings, FiShield, FiTrash2, FiUpload, FiUser, FiUsers, FiVolume2, FiVolumeX, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiEye, FiEyeOff, FiFlag, FiHome, FiLock, FiLogOut, FiMessageCircle, FiPackage, FiSave, FiSearch, FiSettings, FiShield, FiShoppingCart, FiTrash2, FiUpload, FiUser, FiUsers, FiVolume2, FiVolumeX, FiX } from 'react-icons/fi';
 
 interface User {
   id: number;
@@ -12,6 +12,8 @@ interface User {
   display_name: string;
   bio?: string;
   is_private?: boolean;
+  roles?: string[];
+  current_mode?: string;
   profile_pic: string;
   email: string;
   email_verified: boolean;
@@ -95,6 +97,12 @@ export default function Settings() {
   const [closeFriends, setCloseFriends] = useState<CloseFriend[]>([]);
   const [addFriendUsername, setAddFriendUsername] = useState('');
 
+  // Role management state
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [currentMode, setCurrentMode] = useState<string>('buyer');
+  const [switchingMode, setSwitchingMode] = useState(false);
+  const [addingRole, setAddingRole] = useState(false);
+
   const router = useRouter();
 
   const getHeaders = (includeJson = false): HeadersInit => {
@@ -130,6 +138,8 @@ export default function Settings() {
       setBio(userData.bio || '');
       setProfilePic(userData.profile_pic || '');
       setIsPrivate(Boolean(userData.is_private));
+      setUserRoles(userData.roles || []);
+      setCurrentMode(userData.current_mode || 'buyer');
 
       // Load additional data
       await loadRestrictions();
@@ -160,6 +170,8 @@ export default function Settings() {
       setBio(userData.bio || '');
       setProfilePic(userData.profile_pic || '');
       setIsPrivate(Boolean(userData.is_private));
+      setUserRoles(userData.roles || []);
+      setCurrentMode(userData.current_mode || 'buyer');
     } catch (error) {
       console.error('Failed to load user data:', error);
     } finally {
@@ -540,6 +552,63 @@ export default function Settings() {
     }
   };
 
+  // Role management functions
+  const switchMode = async (mode: string) => {
+    if (mode === currentMode) return;
+
+    setSwitchingMode(true);
+    try {
+      const res = await fetch('/api/auth/switch-mode', {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify({ mode }),
+      });
+
+      if (res.ok) {
+        setCurrentMode(mode);
+        alert(`Switched to ${mode} mode successfully`);
+        // Update theme
+        document.body.className = `${mode}-theme`;
+        localStorage.setItem('user_mode', mode);
+        window.dispatchEvent(new Event('themeChange'));
+        // Reload page to apply new UI theme
+        window.location.reload();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to switch mode');
+      }
+    } catch (error) {
+      alert('Failed to switch mode');
+    } finally {
+      setSwitchingMode(false);
+    }
+  };
+
+  const addRole = async (role: string) => {
+    if (userRoles.includes(role)) return;
+
+    setAddingRole(true);
+    try {
+      const res = await fetch('/api/auth/add-role', {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify({ role }),
+      });
+
+      if (res.ok) {
+        setUserRoles(prev => [...prev, role]);
+        alert(`Added ${role} role successfully`);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to add role');
+      }
+    } catch (error) {
+      alert('Failed to add role');
+    } finally {
+      setAddingRole(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container">
@@ -585,6 +654,9 @@ export default function Settings() {
           </button>
           <button className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>
             <FiMessageCircle size={16} /> Chat Settings
+          </button>
+          <button className={`tab-btn ${activeTab === 'account' ? 'active' : ''}`} onClick={() => setActiveTab('account')}>
+            <FiUser size={16} /> Account
           </button>
           <button className={`tab-btn ${activeTab === 'account' ? 'active' : ''}`} onClick={() => setActiveTab('account')}>
             <FiLock size={16} /> Account
@@ -984,6 +1056,79 @@ export default function Settings() {
               </div>
             </div>
           )}
+
+          {activeTab === 'account' && (
+            <div className="settings-section">
+              <h2>Account Management</h2>
+
+              <div className="subsection">
+                <h3>Account Mode</h3>
+                <p>Switch between your buyer and seller experiences. Current mode: <strong>{currentMode}</strong></p>
+                <div className="mode-switcher">
+                  <button
+                    onClick={() => switchMode('buyer')}
+                    className={`mode-btn ${currentMode === 'buyer' ? 'active' : ''}`}
+                    disabled={switchingMode || !userRoles.includes('buyer')}
+                  >
+                    🛒 Buyer Mode
+                  </button>
+                  <button
+                    onClick={() => switchMode('seller')}
+                    className={`mode-btn ${currentMode === 'seller' ? 'active' : ''}`}
+                    disabled={switchingMode || !userRoles.includes('seller')}
+                  >
+                    🏪 Seller Mode
+                  </button>
+                </div>
+                {switchingMode && <p>Switching mode...</p>}
+              </div>
+
+              <div className="subsection">
+                <h3>Your Roles</h3>
+                <p>You have access to the following account types:</p>
+                <div className="roles-list">
+                  {userRoles.map(role => (
+                    <span key={role} className="role-badge">
+                      {role === 'buyer' ? '🛒' : '🏪'} {role.charAt(0).toUpperCase() + role.slice(1)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="subsection">
+                <h3>Add Account Type</h3>
+                <p>Get access to additional features by adding more account types:</p>
+                <div className="add-role-section">
+                  {!userRoles.includes('buyer') && (
+                    <button
+                      onClick={() => addRole('buyer')}
+                      className="add-role-btn"
+                      disabled={addingRole}
+                    >
+                      🛒 Add Buyer Account
+                    </button>
+                  )}
+                  {!userRoles.includes('seller') && (
+                    <button
+                      onClick={() => addRole('seller')}
+                      className="add-role-btn"
+                      disabled={addingRole}
+                    >
+                      🏪 Add Seller Account
+                    </button>
+                  )}
+                </div>
+                {addingRole && <p>Adding role...</p>}
+              </div>
+
+              <div className="subsection danger-zone">
+                <h3>Danger Zone</h3>
+                <button onClick={deleteAccount} className="delete-btn">
+                  <FiTrash2 size={16} /> Delete Account
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -996,6 +1141,24 @@ export default function Settings() {
           <FiSearch size={16} />
           <span>Search</span>
         </button>
+        {currentMode === 'buyer' && (
+          <>
+            <button onClick={() => router.push('/cart')} className="navButton">
+              <FiShoppingCart size={16} />
+              <span>Cart</span>
+            </button>
+            <button onClick={() => router.push('/buyer-orders')} className="navButton">
+              <FiPackage size={16} />
+              <span>Orders</span>
+            </button>
+          </>
+        )}
+        {currentMode === 'seller' && (
+          <button onClick={() => router.push('/seller-orders')} className="navButton">
+            <FiPackage size={16} />
+            <span>Sales</span>
+          </button>
+        )}
         <button onClick={() => router.push('/settings')} className="navButton">
           <FiSettings size={16} />
           <span>Settings</span>

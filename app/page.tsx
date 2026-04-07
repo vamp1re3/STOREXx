@@ -13,6 +13,7 @@ import {
   FiLogIn,
   FiMessageCircle,
   FiMessageSquare,
+  FiPackage,
   FiSearch,
   FiSettings,
   FiShoppingCart,
@@ -75,6 +76,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [introHidden, setIntroHidden] = useState(false);
   const [showCreateStory, setShowCreateStory] = useState(false);
+  const [userMode, setUserMode] = useState<string>('buyer');
 
   const getHeaders = useCallback((authToken?: string, includeJson = false): HeadersInit => {
     const headers: HeadersInit = {};
@@ -102,6 +104,7 @@ export default function Home() {
       const user = await res.json();
       setCurrentUserId(user.id);
       setIsAuthenticated(true);
+      setUserMode(user.current_mode || 'buyer');
     } catch (error) {
       console.error('Failed to load viewer:', error);
     }
@@ -426,7 +429,7 @@ export default function Home() {
         </div>
       )}
 
-      {isAuthenticated && (
+      {isAuthenticated && userMode === 'seller' && (
         <div className="card composer-card" id="postBox">
           <div className="composer-header">
             <div>
@@ -658,6 +661,24 @@ export default function Home() {
             <FiSearch size={16} />
             <span>Search</span>
           </Link>
+          {userMode === 'buyer' && (
+            <>
+              <Link href="/cart" className="navButton">
+                <FiShoppingCart size={16} />
+                <span>Cart</span>
+              </Link>
+              <Link href="/buyer-orders" className="navButton">
+                <FiPackage size={16} />
+                <span>Orders</span>
+              </Link>
+            </>
+          )}
+          {userMode === 'seller' && (
+            <Link href="/seller-orders" className="navButton">
+              <FiPackage size={16} />
+              <span>Sales</span>
+            </Link>
+          )}
           <Link href="/settings" className="navButton">
             <FiSettings size={16} />
             <span>Settings</span>

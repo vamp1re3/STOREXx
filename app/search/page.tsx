@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FiArrowLeft, FiFilm, FiHome, FiMessageCircle, FiSearch, FiSettings, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiFilm, FiHome, FiMessageCircle, FiPackage, FiSearch, FiSettings, FiShoppingCart, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 
 interface UserResult {
@@ -28,6 +28,7 @@ type SearchTab = 'users' | 'products' | 'videos';
 
 export default function Search() {
   const [token, setToken] = useState<string | null>(null);
+  const [userMode, setUserMode] = useState<string>('buyer');
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState<UserResult[]>([]);
   const [posts, setPosts] = useState<PostResult[]>([]);
@@ -43,6 +44,18 @@ export default function Search() {
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
         setToken(storedToken);
+        // Get user data to determine mode
+        try {
+          const userRes = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          });
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            setUserMode(userData.current_mode || 'buyer');
+          }
+        } catch (error) {
+          console.error('Failed to get user mode:', error);
+        }
         setReady(true);
         return;
       }
@@ -256,6 +269,24 @@ export default function Search() {
           <FiSearch size={16} />
           <span>Search</span>
         </Link>
+        {userMode === 'buyer' && (
+          <>
+            <Link href="/cart" className="navButton">
+              <FiShoppingCart size={16} />
+              <span>Cart</span>
+            </Link>
+            <Link href="/buyer-orders" className="navButton">
+              <FiPackage size={16} />
+              <span>Orders</span>
+            </Link>
+          </>
+        )}
+        {userMode === 'seller' && (
+          <Link href="/seller-orders" className="navButton">
+            <FiPackage size={16} />
+            <span>Sales</span>
+          </Link>
+        )}
         <Link href="/settings" className="navButton">
           <FiSettings size={16} />
           <span>Settings</span>

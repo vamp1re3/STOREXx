@@ -7,13 +7,28 @@ CREATE TABLE users (
   display_name VARCHAR(100),
   bio TEXT DEFAULT '',
   is_private BOOLEAN DEFAULT FALSE,
-  is_seller BOOLEAN DEFAULT FALSE,
   email VARCHAR(100) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   profile_pic VARCHAR(255),
   email_verified BOOLEAN DEFAULT FALSE,
   account_status VARCHAR(20) DEFAULT 'active',
+  current_mode VARCHAR(20) DEFAULT 'buyer' NOT NULL, -- 'buyer' or 'seller'
+  -- Bank details for sellers
+  bank_name VARCHAR(100),
+  account_holder_name VARCHAR(100),
+  account_number VARCHAR(50),
+  routing_number VARCHAR(50),
+  bank_address TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User roles table for multiple roles per user
+CREATE TABLE user_roles (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  role VARCHAR(20) NOT NULL, -- 'buyer', 'seller'
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, role)
 );
 
 -- Indexes for users table
@@ -41,6 +56,40 @@ CREATE TABLE posts (
 -- Indexes for posts table
 CREATE INDEX idx_posts_user_id ON posts(user_id);
 CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+
+-- Cart items table
+CREATE TABLE cart_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  quantity INTEGER DEFAULT 1 NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, post_id)
+);
+
+-- Orders table
+CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  buyer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL,
+  total_amount NUMERIC(10,2) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending' NOT NULL, -- 'pending', 'paid', 'shipped', 'delivered', 'cancelled'
+  payment_receipt_url VARCHAR(255),
+  shipping_address TEXT,
+  notes TEXT,
+  paid_at TIMESTAMP,
+  shipped_at TIMESTAMP,
+  delivered_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for cart_items and orders
+CREATE INDEX idx_cart_items_user_id ON cart_items(user_id);
+CREATE INDEX idx_orders_buyer_id ON orders(buyer_id);
+CREATE INDEX idx_orders_seller_id ON orders(seller_id);
+CREATE INDEX idx_orders_status ON orders(status);
 
 -- Stories table
 CREATE TABLE stories (

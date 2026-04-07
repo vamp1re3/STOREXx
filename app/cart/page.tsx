@@ -141,7 +141,7 @@ export default function CartPage() {
               <p className="muted-text">Total after discounts</p>
               <p>${total.toFixed(2)}</p>
             </div>
-            <button className="primaryBtn" onClick={() => alert('Checkout is not yet implemented, but your cart is ready.')}>Proceed to checkout</button>
+            <button className="primaryBtn" onClick={() => router.push('/checkout')}>Proceed to checkout</button>
           </div>
         )}
       </div>

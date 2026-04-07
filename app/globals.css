@@ -1987,3 +1987,159 @@ button:disabled {
     align-self: flex-start;
   }
 }
+
+/* Theme Classes for Seller/Buyer Modes */
+body.seller-theme {
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --card: rgba(20, 20, 20, 0.95);
+  --card-strong: rgba(15, 15, 15, 0.98);
+  --text: #ffffff;
+  --muted: #cccccc;
+  --border: rgba(100, 100, 100, 0.3);
+  --accent: #2563eb;
+  --accent-hover: #3b82f6;
+  --accent-dark: #1d4ed8;
+  --maroon: #dc2626;
+  --dark-blue: #1e3a8a;
+  --danger: #ef4444;
+  --success: #10b981;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.2), transparent 0 28%),
+    radial-gradient(circle at top right, rgba(30, 58, 138, 0.15), transparent 0 24%),
+    linear-gradient(135deg, #000000 0%, #1a1a1a 36%, #2a2a2a 66%, #0f1419 100%);
+}
+
+body.buyer-theme {
+  --background: #fafafa;
+  --foreground: #1a1a1a;
+  --card: rgba(255, 255, 255, 0.95);
+  --card-strong: rgba(255, 255, 255, 0.98);
+  --text: #1a1a1a;
+  --muted: #666666;
+  --border: rgba(200, 200, 200, 0.3);
+  --accent: #8b5cf6;
+  --accent-hover: #a78bfa;
+  --accent-dark: #7c3aed;
+  --maroon: #ec4899;
+  --dark-blue: #6366f1;
+  --danger: #ef4444;
+  --success: #10b981;
+  --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  background:
+    radial-gradient(circle at top left, rgba(139, 92, 246, 0.1), transparent 0 28%),
+    radial-gradient(circle at top right, rgba(236, 72, 153, 0.08), transparent 0 24%),
+    linear-gradient(135deg, #ffffff 0%, #f8fafc 36%, #f1f5f9 66%, #e2e8f0 100%);
+}
+
+body.buyer-theme .card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+body.buyer-theme button {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+}
+
+body.buyer-theme button:hover:not(:disabled) {
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+}
+
+/* Role and Mode Management Styles */
+.role-selection {
+  margin: 20px 0;
+}
+
+.role-title {
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.role-description {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.9em;
+  color: var(--muted);
+}
+
+.mode-switcher {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.mode-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.mode-btn:hover:not(.active):not(:disabled) {
+  border-color: var(--accent-hover);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.mode-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.roles-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--accent);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.add-role-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.add-role-btn {
+  padding: 10px 16px;
+  background: var(--success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.add-role-btn:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.add-role-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
