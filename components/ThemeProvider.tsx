@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 const THEME_CACHE_KEY = 'theme_cache';
 const THEME_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
@@ -12,10 +13,18 @@ interface ThemeCache {
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<string>('logout');
+  const pathname = usePathname();
 
   useEffect(() => {
     // Get user mode from cache, localStorage, or API
     const getUserMode = async () => {
+      // Check if we're on settings page
+      if (pathname === '/settings') {
+        setTheme('settings');
+        document.body.className = 'settings-theme';
+        return;
+      }
+
       const token = localStorage.getItem('token');
       
       // If no token, use logout theme
@@ -74,6 +83,13 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
     // Listen for theme changes (when user switches modes or logs out)
     const handleThemeChange = () => {
+      // Check if we're on settings page
+      if (pathname === '/settings') {
+        setTheme('settings');
+        document.body.className = 'settings-theme';
+        return;
+      }
+
       const token = localStorage.getItem('token');
       const currentMode = localStorage.getItem('user_mode');
       
@@ -97,7 +113,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     return () => {
       window.removeEventListener('themeChange', handleThemeChange);
     };
-  }, []);
+  }, [pathname]);
 
   return <>{children}</>;
 }

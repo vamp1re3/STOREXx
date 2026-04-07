@@ -1,4 +1,4 @@
-# Store X - Modern Marketplace
+https://github.com/vamp1re3/STOREXx.githttps://github.com/vamp1re3/STOREXx.git# Store X - Modern Marketplace
 
 A Next.js-based marketplace application with dark theme and modern features.
 
