@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
+import cloudinary from '../../../lib/cloudinary';
 import { authenticate } from '../../../lib/auth';
 import { checkRateLimit, getRequestKey } from '../../../lib/rate-limit';
 
@@ -24,40 +23,93 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'You must be signed in to upload this file' }, { status: 401 });
     }
 
-    if (!(fileEntry instanceof File)) {
+    if (!fileEntry || typeof fileEntry !== 'object') {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const file = fileEntry;
+    const file = fileEntry as File;
 
     if (file.size === 0) {
       return NextResponse.json({ error: 'The selected file is empty' }, { status: 400 });
     }
 
-    if (!(file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+    // More permissive file type check - allow empty type or common formats
+    const isValidType = !file.type ||
+      file.type.startsWith('image/') ||
+      file.type.startsWith('video/') ||
+      // Allow HEIC and other iOS formats
+      file.type === 'image/heic' ||
+      file.type === 'image/heif' ||
+      // Allow common video formats that might not have proper MIME types
+      file.name.toLowerCase().match(/\.(mp4|mov|avi|webm|m4v)$/);
+
+    if (!isValidType) {
       return NextResponse.json({ error: 'Only image or video files are allowed' }, { status: 400 });
     }
 
-    const maxImageSize = 20 * 1024 * 1024;
-    const maxVideoSize = 80 * 1024 * 1024;
+    // Reasonable limits for Vercel (keep under 4.5MB request limit)
+    const maxImageSize = 4 * 1024 * 1024; // 4MB for images
+    const maxVideoSize = 10 * 1024 * 1024; // 10MB for videos (still might be tight)
     const maxSize = file.type.startsWith('video/') ? maxVideoSize : maxImageSize;
+
     if (file.size > maxSize) {
-      const limitLabel = file.type.startsWith('video/') ? '80MB' : '20MB';
+      const limitLabel = file.type.startsWith('video/') ? '10MB' : '4MB';
       return NextResponse.json({ error: `File is too large. Please keep it under ${limitLabel}.` }, { status: 400 });
     }
 
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', type);
-    await fs.mkdir(uploadDir, { recursive: true });
+    // Check if Cloudinary is configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      return NextResponse.json({ error: 'File upload service is not configured. Please contact the administrator.' }, { status: 500 });
+    }
 
-    const ext = path.extname(file.name).toLowerCase() || (file.type.startsWith('video/') ? '.mp4' : '.jpg');
-    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    const filePath = path.join(uploadDir, filename);
-
+    // Convert file to buffer for Cloudinary upload
     const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(filePath, buffer);
 
-    const url = `/uploads/${type}/${filename}`;
-    return NextResponse.json({ success: true, url, filename, mediaType: file.type, size: file.size });
+    // Upload to Cloudinary
+    const uploadResult = await new Promise<{
+      secure_url: string;
+      public_id: string;
+      width?: number;
+      height?: number;
+      original_filename?: string;
+      resource_type: string;
+    }>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: `helket/${type}`,
+          resource_type: 'auto',
+          public_id: `${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+          // Optimize images
+          ...(file.type.startsWith('image/') && {
+            transformation: [
+              { width: 1200, height: 1200, crop: 'limit' },
+              { quality: 'auto' }
+            ]
+          })
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else if (result) resolve(result);
+          else reject(new Error('Upload failed: no result returned'));
+        }
+      );
+
+      uploadStream.end(buffer);
+    });
+
+    const url = uploadResult.secure_url;
+    const publicId = uploadResult.public_id;
+
+    return NextResponse.json({
+      success: true,
+      url,
+      publicId,
+      filename: uploadResult.original_filename || 'uploaded-file',
+      mediaType: file.type || uploadResult.resource_type,
+      size: file.size,
+      width: uploadResult.width,
+      height: uploadResult.height
+    });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
