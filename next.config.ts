@@ -4,14 +4,15 @@ const nextConfig: NextConfig = {
   // Optimized body size (reduced from 100mb for better memory management)
   experimental: {
     proxyClientMaxBodySize: '50mb',
-    reactCompiler: true, // Auto-memoize components (Next.js 15+)
   },
   
   // Build optimizations
-  swcMinify: true, // Use SWC minification
   compress: true, // Enable gzip compression
   poweredByHeader: false, // Remove X-Powered-By header
   productionBrowserSourceMaps: false, // Reduce bundle size in production
+  
+  // Turbopack configuration (required when using webpack config)
+  turbopack: {},
   
   // Image optimization
   images: {
