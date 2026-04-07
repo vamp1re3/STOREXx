@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<string>('buyer');
+  const [theme, setTheme] = useState<string>('seller');
 
   useEffect(() => {
     // Get user mode from localStorage or API
@@ -16,7 +16,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
           });
           if (res.ok) {
             const userData = await res.json();
-            const userMode = userData.current_mode || 'buyer';
+            const userMode = userData.current_mode || 'seller';
             setTheme(userMode);
             document.body.className = `${userMode}-theme`;
           }
@@ -30,7 +30,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
     // Listen for theme changes (when user switches modes)
     const handleThemeChange = () => {
-      const currentMode = localStorage.getItem('user_mode') || 'buyer';
+      const currentMode = localStorage.getItem('user_mode') || 'seller';
       setTheme(currentMode);
       document.body.className = `${currentMode}-theme`;
     };

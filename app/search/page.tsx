@@ -28,7 +28,7 @@ type SearchTab = 'users' | 'products' | 'videos';
 
 export default function Search() {
   const [token, setToken] = useState<string | null>(null);
-  const [userMode, setUserMode] = useState<string>('buyer');
+  const [userMode, setUserMode] = useState<string>('seller');
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState<UserResult[]>([]);
   const [posts, setPosts] = useState<PostResult[]>([]);
@@ -51,7 +51,7 @@ export default function Search() {
           });
           if (userRes.ok) {
             const userData = await userRes.json();
-            setUserMode(userData.current_mode || 'buyer');
+            setUserMode(userData.current_mode || 'seller');
           }
         } catch (error) {
           console.error('Failed to get user mode:', error);

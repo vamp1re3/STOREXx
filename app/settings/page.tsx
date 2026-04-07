@@ -139,7 +139,7 @@ export default function Settings() {
       setProfilePic(userData.profile_pic || '');
       setIsPrivate(Boolean(userData.is_private));
       setUserRoles(userData.roles || []);
-      setCurrentMode(userData.current_mode || 'buyer');
+      setCurrentMode(userData.current_mode || 'seller');
 
       // Load additional data
       await loadRestrictions();
@@ -171,7 +171,7 @@ export default function Settings() {
       setProfilePic(userData.profile_pic || '');
       setIsPrivate(Boolean(userData.is_private));
       setUserRoles(userData.roles || []);
-      setCurrentMode(userData.current_mode || 'buyer');
+      setCurrentMode(userData.current_mode || 'seller');
     } catch (error) {
       console.error('Failed to load user data:', error);
     } finally {

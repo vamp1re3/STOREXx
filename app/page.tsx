@@ -76,7 +76,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [introHidden, setIntroHidden] = useState(false);
   const [showCreateStory, setShowCreateStory] = useState(false);
-  const [userMode, setUserMode] = useState<string>('buyer');
+  const [userMode, setUserMode] = useState<string>('seller');
 
   const getHeaders = useCallback((authToken?: string, includeJson = false): HeadersInit => {
     const headers: HeadersInit = {};
@@ -104,7 +104,7 @@ export default function Home() {
       const user = await res.json();
       setCurrentUserId(user.id);
       setIsAuthenticated(true);
-      setUserMode(user.current_mode || 'buyer');
+      setUserMode(user.current_mode || 'seller');
     } catch (error) {
       console.error('Failed to load viewer:', error);
     }
@@ -379,7 +379,7 @@ export default function Home() {
     <div className="container page-with-mobile-nav">
       <div className={`hero-card ${introHidden ? 'hero-card-collapsed' : ''}`}>
         <div className="hero-copy">
-          <p className="eyebrow">Luxury dark social</p>
+          <p className="eyebrow">Luxury dark marketplace</p>
           <h1 className="brand-title">HELKET</h1>
           {!introHidden && (
             <p className="brand-subtitle">

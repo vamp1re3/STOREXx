@@ -1,6 +1,6 @@
-# Helket - Dark Social Media App
+# Helket - Dark Marketplace
 
-A Next.js-based social media application with dark theme and modern features.
+A Next.js-based marketplace application with dark theme and modern features.
 
 ## Setup
 
