@@ -1,4 +1,4 @@
-# Helket - Dark Marketplace
+# Store X - Modern Marketplace
 
 A Next.js-based marketplace application with dark theme and modern features.
 
@@ -7,7 +7,7 @@ A Next.js-based marketplace application with dark theme and modern features.
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd experiments
+   cd store-x
    ```
 
 2. **Install dependencies**
