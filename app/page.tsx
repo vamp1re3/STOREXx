@@ -190,7 +190,7 @@ export default function Home() {
   }, [loadPosts, loadUnreadCounts, loadViewer]);
 
   useEffect(() => {
-    const savedPreference = localStorage.getItem('helket-intro-hidden');
+    const savedPreference = localStorage.getItem('storex-intro-hidden');
     setIntroHidden(savedPreference === '1');
     void initializeSession();
   }, [initializeSession]);
@@ -370,7 +370,7 @@ export default function Home() {
   const toggleIntro = () => {
     setIntroHidden((current) => {
       const nextValue = !current;
-      localStorage.setItem('helket-intro-hidden', nextValue ? '1' : '0');
+      localStorage.setItem('storex-intro-hidden', nextValue ? '1' : '0');
       return nextValue;
     });
   };
@@ -380,7 +380,7 @@ export default function Home() {
       <div className={`hero-card ${introHidden ? 'hero-card-collapsed' : ''}`}>
         <div className="hero-copy">
           <p className="eyebrow">Luxury dark marketplace</p>
-          <h1 className="brand-title">HELKET</h1>
+          <h1 className="brand-title">StoreX</h1>
           {!introHidden && (
             <p className="brand-subtitle">
               Buy from sellers or list products with price, stock and discounts in a modern marketplace experience.
@@ -415,9 +415,9 @@ export default function Home() {
 
       {!isAuthenticated && (
         <div className="card auth-card" id="auth">
-          <p className="eyebrow">Welcome</p>
-          <h2>Login to unlock your feed</h2>
-          <p className="muted-text">Search users, upload posts, save favorites, and send private messages once you sign in.</p>
+          <p className="eyebrow">Welcome back</p>
+          <h2>Sign in to your luxury dark feed</h2>
+          <p className="muted-text">Access private chats, exclusive media sharing, and a premium StoreX experience with a black-on-deep red luxury interface.</p>
           <div className="button-group auth-actions">
             <Link href="/login" className="navButton">
               <FiLogIn size={16} /> Login

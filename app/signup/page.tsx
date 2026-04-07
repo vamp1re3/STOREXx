@@ -150,11 +150,11 @@ export default function Signup() {
     <div className="container auth-shell">
       <div className="card auth-card">
         <p className="eyebrow">Create account</p>
-        <h1 className="brand-title">Join HELKET</h1>
+        <h1 className="brand-title">Join StoreX</h1>
         <p className="brand-subtitle">
           {googleData
-            ? 'Complete your profile to finish signing up with Google.'
-            : 'Set up your profile and start posting photos, videos, and private messages.'
+            ? 'Complete your profile to finish signing up with Google and join the luxury dark feed.'
+            : 'Create your account and enter StoreX with a rich black background, deep red accents, and premium media sharing.'
           }
         </p>
 

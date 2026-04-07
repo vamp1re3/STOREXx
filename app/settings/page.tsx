@@ -798,7 +798,7 @@ export default function Settings() {
 
               <div className="subsection">
                 <h3>Submit Feedback</h3>
-                <p>Help us improve HELKET by sharing your thoughts and suggestions.</p>
+                <p>Help us improve StoreX by sharing your thoughts and suggestions.</p>
                 <div className="form-group">
                   <label>Feedback Type</label>
                   <select value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)}>
@@ -896,7 +896,6 @@ export default function Settings() {
                             <option value="dark">Dark</option>
                             <option value="blue">Blue</option>
                             <option value="green">Green</option>
-                            <option value="purple">Purple</option>
                           </select>
                         </div>
                       </div>

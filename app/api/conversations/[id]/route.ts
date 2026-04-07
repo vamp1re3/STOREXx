@@ -21,7 +21,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Invalid muted value' }, { status: 400 });
     }
 
-    if (theme !== undefined && !['default', 'dark', 'blue', 'green', 'purple'].includes(theme)) {
+    if (theme !== undefined && !['default', 'dark', 'blue', 'green'].includes(theme)) {
       return NextResponse.json({ error: 'Invalid theme value' }, { status: 400 });
     }
 

@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     }>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: `helket/${type}`,
+          folder: `storex/${type}`,
           resource_type: 'auto',
           public_id: `${Date.now()}-${Math.round(Math.random() * 1e9)}`,
           // Optimize images

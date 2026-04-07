@@ -54,7 +54,7 @@ export default function Login() {
     <div className="container auth-shell">
       <div className="card auth-card">
         <p className="eyebrow">Welcome back</p>
-        <h1 className="brand-title">HELKET</h1>
+        <h1 className="brand-title">StoreX</h1>
         <p className="brand-subtitle">Sign in to your luxury dark feed, private chats, and media sharing.</p>
 
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" />

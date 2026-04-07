@@ -1,0 +1,2 @@
+error: failed to push some refs to 'https://github.com/vamp1re3/StoreX.git'
+^C

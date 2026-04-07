@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HELKET",
+  title: "StoreX",
   description: "Luxury marketplace for buyers and sellers to connect and trade.",
 };
 

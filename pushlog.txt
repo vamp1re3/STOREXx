@@ -1,0 +1,10 @@
+remote: warning: See https://gh.io/lfs for more information.        
+remote: warning: File git-installer.exe is 61.57 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+remote: 
+remote: Create a pull request for 'master' on GitHub by visiting:        
+remote:      https://github.com/vamp1re3/StoreX/pull/new/master        
+remote: 
+To https://github.com/vamp1re3/StoreX.git
+ * [new branch]      master -> master
+branch 'master' set up to track 'https://github.com/vamp1re3/StoreX.git/master'.
